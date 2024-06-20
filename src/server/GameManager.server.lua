@@ -1,14 +1,24 @@
 -- Services
 local ServerScriptService = game:GetService('ServerScriptService')
 
--- Module Scripts
+-- Module Folders
 local GameModules = ServerScriptService.Server:WaitForChild('GameModules')
-local GameInit = require(GameModules:WaitForChild('GameInit'))
 
--- Initialization (adding remote events and bindable events folder to required services)
+-- Module Scripts
+local DisplayManager = require(GameModules:WaitForChild('DisplayManager'))
+local GameInit = require(GameModules:WaitForChild('GameInit'))
+local RoundManager = require(GameModules:WaitForChild('RoundManager'))
+
+-- Initialization (adding required remote events)
+print('game is initalizing')
 GameInit.init()
+DisplayManager.init()
 
 -- Main game loop
 while task.wait() do
-	task.wait()
+	RoundManager.waitForPlayers()
+    RoundManager.runIntermission()
+    RoundManager.prepareRound()
+	RoundManager.runRound()
+	RoundManager.resetRound()
 end

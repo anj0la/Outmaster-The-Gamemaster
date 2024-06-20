@@ -1,6 +1,6 @@
 local EventCreator = {}
 
-function EventCreator.createEvent(name, type, location)
+function EventCreator.createEvent(type, name, location)
 	local newEvent = Instance.new(type)
 	newEvent.Name = name
     newEvent.Parent = location
