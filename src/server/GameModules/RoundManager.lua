@@ -1,9 +1,7 @@
 local RoundManager = {}
 
 -- Services
-local ReplicatedStorage = game:GetService('ReplicatedStorage')
 local ServerScriptService = game:GetService('ServerScriptService')
-local ServerStorage = game:GetService('ServerStorage')
 
 -- Module Folders
 local Configurations = ServerScriptService.Server:WaitForChild('Configurations')
@@ -12,7 +10,9 @@ local UtilityModules = ServerScriptService.Server:WaitForChild('UtilityModules')
 
 -- Module Scripts
 local DisplayManager = require(GameModules:WaitForChild('DisplayManager'))
+local GameInit = require(GameModules:WaitForChild('GameInit'))
 local GameSettings = require(Configurations:WaitForChild('GameSettings'))
+local MapManager = require(GameModules:WaitForChild('MapManager'))
 local PlayerManager = require(GameModules:WaitForChild('PlayerManager'))
 local Timer = require(UtilityModules:WaitForChild('Timer'))
 
@@ -44,8 +44,9 @@ end
 
 local function endVoting()
 	print('Ending map voting...')
-	--MapManager.endMapVoting()
-	--MapManager.selectChosenMap()
+    DisplayManager.updateTimer(0, nil)
+	MapManager.endMapVoting()
+	MapManager.selectChosenMap()
 end
 
 local function startRound()
@@ -64,6 +65,10 @@ local function endRound()
 end
 
 -- Module Functions
+function RoundManager.init()
+    GameInit.init()
+    DisplayManager.init()
+end
 
 function RoundManager.initRound()
 	DisplayManager.updatePlayersLeft(0, false)
@@ -98,10 +103,9 @@ function RoundManager.runIntermission()
 	DisplayManager.updateTimer(nil, 'INTERMISSION')
 
 	-- DELETE LATER, CAUSE WE NEEDA FIX THIS
-	--MapManager.startMapVoting()
+	MapManager.startMapVoting()
 	startTimer(intermissionTimer, GameSettings.INTERMISSION_DURATION, endVoting)
-	--task.wait(GameSettings.INTERMISSION_DURATION)
-	--endVoting()
+	task.wait(GameSettings.INTERMISSION_DURATION)
 end
 
 --[[
@@ -126,7 +130,7 @@ function RoundManager.resetRound()
     print('active players: ', PlayerManager.getActivePlayers())
     print('queued players: ', PlayerManager.getQueuedPlayers())
 	task.wait(GameSettings.TRANSITION_DURATION)
-	--MapManager.removeMap()
+	MapManager.removeMap()
 	DisplayManager.updatePlayersLeft(0, false)
 	DisplayManager.updateGamemaster(nil, false)
 end
