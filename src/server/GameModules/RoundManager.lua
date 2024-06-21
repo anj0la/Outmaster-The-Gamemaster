@@ -54,9 +54,6 @@ local function startRound()
 	print("Starting the round...")
 end
 
---[[
-Ends the round when there are no players left (last player = Gamemaster), the time has run out, or the Gamemaster has been destroyed.
-]]
 local function endRound()
 	PlayerManager.removePlayersFromActive()
 	print("Ending the round...")
