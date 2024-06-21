@@ -2,6 +2,7 @@ local PlayerManager = {}
 
 -- Services
 local Players = game:GetService('Players')
+local Teams = game:GetService('Teams')
 -- local ReplicatedStorage = game:GetService('ReplicatedStorage)
 
 -- Map Variables (ONLY USED FOR RESPAWNING)
@@ -11,8 +12,9 @@ local lobbySpawn = lobby:WaitForChild('SpawnLocation')
 -- local chosenMapSpawns = chosenMap:WaitForChild('SpawnLocations'):GetChildren()
 
 -- Local Variables
-local queuedPlayers = {}
 local activePlayers = {}
+local queuedPlayers = {}
+local teams = Teams:GetTeams()
 
 -- Local Functions
 local function loadLeaderstats(player)
@@ -45,6 +47,7 @@ local function onPlayerJoin()
 		loadLeaderstats(player)
 		player.RespawnLocation = lobbySpawn -- regardless of whether a game is underway, when a player joins the game, they will ALWAYS spawn in the lobby
 		table.insert(queuedPlayers, player) -- added to the queue so they are able to play the next game
+		--player.Team = Teams:WaitForChild('Spectators') -- moving the players to the spectator team
 	end								
 end
 
@@ -57,7 +60,7 @@ local function removePlayerFromQueue(player)
 	end
 end
 
-local function removePlayerFromQueueOrRound(player)
+local function removePlayerFromGame(player)
 	local deletedPlayer = false
 	for playerKey, whichPlayer in ipairs(queuedPlayers) do
 		if whichPlayer == player then
@@ -67,7 +70,7 @@ local function removePlayerFromQueueOrRound(player)
 	end
 	
 	--[[ if we haven't deleted the player from the queue (i.e., they don't exist in the queue),
-	we know they are in the active queue and must delete them from it]]-- 
+	we know they are in the active queue and must delete them from it ]]--
 	if not deletedPlayer then 
 		for playerKey, whichPlayer in ipairs(activePlayers) do
 			if whichPlayer == player then
@@ -110,28 +113,30 @@ function PlayerManager.getActivePlayers()
 	return activePlayers
 end
 
-function PlayerManager.respawnPlayerInLobby(player)
+--[[ function PlayerManager.respawnPlayerInLobby(player)
 	player.RespawnLocation = lobbySpawn -- even if a game is underway
 	player:LoadCharacter()
 end
 
 function PlayerManager.addPlayerToQueue(player)
 	table.insert(queuedPlayers, player)
-end
+end ]]
 
 function PlayerManager.removePlayerFromQueue(player)
 	for playerKey, whichPlayer in ipairs(queuedPlayers) do
 		if whichPlayer == player then
 			table.remove(queuedPlayers, playerKey)
+			player.Team = Teams:WaitForChild('Spectators') -- moving the player to the spectator team
+
 		end
 	end
 end
-
 
 function PlayerManager.addPlayersToActive()
 	for playerKey, whichPlayer in ipairs(queuedPlayers) do
 		table.remove(queuedPlayers, playerKey)
 		table.insert(activePlayers, whichPlayer)
+		whichPlayer.Team = Teams:WaitForChild('Players') -- moving the players to the players team
 	end
 end
 
@@ -139,12 +144,13 @@ function PlayerManager.removePlayersFromActive()
 	for playerKey, whichPlayer in ipairs(activePlayers) do
 		table.remove(activePlayers, playerKey)
 		table.insert(queuedPlayers, whichPlayer)
+		whichPlayer.Team = Teams:WaitForChild('Spectators') -- moving the players to the spectator team
 	end
 end
 
 
 -- Event Bindings
 Players.PlayerAdded:Connect(onPlayerJoin)
-Players.PlayerRemoving:Connect(removePlayerFromQueueOrRound) -- when the player leaves, if they are in the queue, remove them
+Players.PlayerRemoving:Connect(removePlayerFromGame) -- when the player leaves, if they are in the queue, remove them
 
 return PlayerManager
