@@ -7,10 +7,10 @@ local PlayerGui = Players.LocalPlayer:WaitForChild('PlayerGui')
 local StatusDisplayGui = PlayerGui:WaitForChild('StatusDisplayGui')
 
 -- Frames
-local BaseFrame = StatusDisplayGui:WaitForChild('BaseFrame')
-local GamemasterFrame = BaseFrame:WaitForChild('GamemasterFrame')
-local PlayersLeftFrame = BaseFrame:WaitForChild('PlayersLeftFrame')
-local TimerFrame = BaseFrame:WaitForChild('TimerFrame')
+local baseFrame = StatusDisplayGui:WaitForChild('BaseFrame')
+local gamemasterFrame = baseFrame:WaitForChild('GamemasterFrame')
+local playersLeftFrame = baseFrame:WaitForChild('PlayersLeftFrame')
+local timerFrame = baseFrame:WaitForChild('TimerFrame')
 
 -- Events
 local RemoteEvents = ReplicatedStorage.Shared:WaitForChild('RemoteEvents')
@@ -19,10 +19,10 @@ local UpdatePlayersLeft = RemoteEvents:WaitForChild('UpdatePlayersLeft')
 local UpdateTimer = RemoteEvents:WaitForChild('UpdateTimer')
 
 -- Local Variables
-local gamemasterImageLabel = GamemasterFrame:WaitForChild('GamemasterImageLabel')
-local playersLeftLabel = PlayersLeftFrame:WaitForChild('PlayersLeftLabel')
-local statusLabel = TimerFrame:WaitForChild('StatusLabel')
-local timerLabel = TimerFrame:WaitForChild('TimerLabel')
+local gamemasterImageLabel = gamemasterFrame:WaitForChild('GamemasterImageLabel')
+local playersLeftLabel = playersLeftFrame:WaitForChild('PlayersLeftLabel')
+local statusLabel = timerFrame:WaitForChild('StatusLabel')
+local timerLabel = timerFrame:WaitForChild('TimerLabel')
 
 -- Local Functions
 local function getGamemasterThumbnail(gamemaster)
@@ -49,14 +49,14 @@ end
 
 local function onUpdatePlayersLeft(newPlayersLeft, visible)
 	playersLeftLabel.Text = newPlayersLeft	
-	playersLeftLabel.Visible = visible
+	playersLeftFrame.Visible = visible
 end
 
 local function onUpdateGamemasterFrame(gamemaster, visible)
 	if gamemaster ~= nil then
 		getGamemasterThumbnail(gamemaster)
 	end
-	gamemasterImageLabel.Parent.Visible = visible
+	gamemasterFrame.Visible = visible
 end
 
 -- Event Binding

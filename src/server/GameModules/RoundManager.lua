@@ -12,7 +12,8 @@ local UtilityModules = ServerScriptService.Server:WaitForChild('UtilityModules')
 
 -- Module Scripts
 local DisplayManager = require(GameModules:WaitForChild('DisplayManager'))
-local GameSettings = require(Configurations:WaitForChild('GameSettings')) 
+local GameSettings = require(Configurations:WaitForChild('GameSettings'))
+local PlayerManager = require(GameModules:WaitForChild('PlayerManager'))
 local Timer = require(UtilityModules:WaitForChild('Timer'))
 
 -- Objects
@@ -56,7 +57,7 @@ end
 Ends the round when there are no players left (last player = Gamemaster), the time has run out, or the Gamemaster has been destroyed.
 ]]
 local function endRound()
-	--PlayerManager.removePlayersFromActive()
+	PlayerManager.removePlayersFromActive()
 	print("Ending the round...")
 	-- will be a boolean value check, sets some stopping variable to true or false i think
 	-- displays winner or something 
@@ -75,27 +76,27 @@ into the chosen map.
 ]]
 function RoundManager.prepareRound()
 	print("Preparing the round...")
-	--PlayerManager.addPlayersToActive()
---	print('queued players: ', PlayerManager.getQueuedPlayers())
---	print('active players: ', PlayerManager.getActivePlayers())
-	--DisplayManager.updateGamemaster(PlayerManager.getPlayer(41959539), true) -- this is where we select the gamemaster and get the player
+	PlayerManager.addPlayersToActive()
+    print('queued players: ', PlayerManager.getQueuedPlayers())
+    print('active players: ', PlayerManager.getActivePlayers())
+	DisplayManager.updateGamemaster(PlayerManager.getPlayer(41959539), true) -- this is where we select the gamemaster and get the player
 end
 
 function RoundManager.waitForPlayers()
-	-- if PlayerManager.getPlayerCount() < GameSettings.MINIMUM_PLAYERS then
-	-- 	DisplayManager.updateTimer(nil, 'WAITING...')
-	-- end
-	-- while PlayerManager.getPlayerCount() < GameSettings.MINIMUM_PLAYERS do
-	-- 	task.wait(GameSettings.TRANSITION_DURATION)
-	-- end
+	if PlayerManager.getPlayerCount() < GameSettings.MINIMUM_PLAYERS then
+        DisplayManager.updateTimer(nil, 'WAITING...')
+    end
+	while PlayerManager.getPlayerCount() < GameSettings.MINIMUM_PLAYERS do
+        task.wait(GameSettings.TRANSITION_DURATION)
+    end
 end
 
 function RoundManager.runIntermission()
 	print("Running intermission code")
---	print('queued players: ', PlayerManager.getQueuedPlayers())
+    print('queued players: ', PlayerManager.getQueuedPlayers())
 	DisplayManager.updatePlayersLeft(0, false)
 	DisplayManager.updateTimer(nil, 'INTERMISSION')
-	
+
 	-- DELETE LATER, CAUSE WE NEEDA FIX THIS
 	--MapManager.startMapVoting()
 	startTimer(intermissionTimer, GameSettings.INTERMISSION_DURATION, endVoting)
@@ -110,7 +111,7 @@ function RoundManager.runRound()
 	-- start timer for player headstart timer
 	print("Starting timer for player head start...")
 	DisplayManager.updateTimer(nil, 'ROUND STARTS IN')
-	--DisplayManager.updatePlayersLeft(PlayerManager.getPlayerCount(), true)
+	DisplayManager.updatePlayersLeft(PlayerManager.getPlayerCount(), true)
 	startTimer(playerHeadstartTimer, GameSettings.PLAYER_HEAD_START_DURATION, startRound)
 	task.wait() -- used to ensure that startRound is called before starting the timer
 	print("Starting round timer...")
@@ -122,8 +123,8 @@ end
 function RoundManager.resetRound()
 	print("Resetting the round...")
 	DisplayManager.updateTimer(0, 'ENDING GAME')
---	print('active players: ', PlayerManager.getActivePlayers())
---	print('queued players: ', PlayerManager.getQueuedPlayers())
+    print('active players: ', PlayerManager.getActivePlayers())
+    print('queued players: ', PlayerManager.getQueuedPlayers())
 	task.wait(GameSettings.TRANSITION_DURATION)
 	--MapManager.removeMap()
 	DisplayManager.updatePlayersLeft(0, false)
