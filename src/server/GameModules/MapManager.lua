@@ -81,7 +81,8 @@ end
 
 local function loadMap()
 	local chosenMap = ReplicatedStorage.Shared:WaitForChild('Maps'):GetChildren()[1]
-	for _, child in pairs(chosenMap:GetChildren()) do
+    local clonedMap = chosenMap:Clone()
+	for _, child in pairs(clonedMap:GetChildren()) do
 		child.Parent = workspace
 	end
 end
@@ -138,11 +139,13 @@ function MapManager.removeMap()
 	-- Get the chosen map from the Maps folder in ReplicatedStorage
 	local map = ReplicatedStorage.Shared:WaitForChild('Maps'):GetChildren()[1]
 	 
-	for _, child in workspace:GetChildren() do
-		if child.Name == map.Name then
-			child:Destroy()
-			break
-		end
+    print(map:GetChildren())
+    for _, child in ipairs(workspace:GetChildren()) do
+        for _, mapChild in ipairs(map:GetChildren()) do
+            if child.Name == mapChild.Name then
+                child:Destroy()
+            end
+        end
 	end
 
     -- Destroy the map in ReplicatedStorage
