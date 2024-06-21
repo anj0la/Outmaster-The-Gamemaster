@@ -81,7 +81,9 @@ function RoundManager.prepareRound()
 	PlayerManager.addPlayersToActive()
     print('queued players: ', PlayerManager.getQueuedPlayers())
     print('active players: ', PlayerManager.getActivePlayers())
-	DisplayManager.updateGamemaster(PlayerManager.getPlayer(41959539), true) -- this is where we select the gamemaster and get the player
+	-- getting the gamemaster
+	PlayerManager.assignGamemaster()
+	DisplayManager.updateGamemaster(PlayerManager.getGamemaster(), true) -- this is where we select the gamemaster and get the player
 end
 
 function RoundManager.waitForPlayers()

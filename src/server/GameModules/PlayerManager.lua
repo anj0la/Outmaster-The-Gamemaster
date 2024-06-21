@@ -2,7 +2,14 @@ local PlayerManager = {}
 
 -- Services
 local Players = game:GetService('Players')
+local ServerScriptService = game:GetService('ServerScriptService')
 local Teams = game:GetService('Teams')
+
+-- Module Folders
+local UtilityModules = ServerScriptService.Server:WaitForChild('UtilityModules')
+
+-- Module Scripts
+local GamemasterChance = require(UtilityModules:WaitForChild('GamemasterChance'))
 -- local ReplicatedStorage = game:GetService('ReplicatedStorage)
 
 -- Map Variables (ONLY USED FOR RESPAWNING)
@@ -41,14 +48,37 @@ local function loadLeaderstats(player)
 end
 
 local function onPlayerJoin()
-    --[[ if a player who creates the server (first player in the game) loads into the game before the player added event can be fired,
-     then the actions of the player added event are performed on that player ]]--
+	--if a player who creates the server (first player in the game) loads into the game before the player added event can be fired,
+	-- then the actions of the player added event are performed on that player
+
 	for _, player in ipairs(Players:GetPlayers()) do
-		loadLeaderstats(player)
-		player.RespawnLocation = lobbySpawn -- regardless of whether a game is underway, when a player joins the game, they will ALWAYS spawn in the lobby
-		table.insert(queuedPlayers, player) -- added to the queue so they are able to play the next game
-		--player.Team = Teams:WaitForChild('Spectators') -- moving the players to the spectator team
-	end								
+		-- Check if the player already has leaderstats
+		if not player:FindFirstChild('leaderstats') then
+			loadLeaderstats(player)
+		end
+
+		-- Set the respawn location to the lobby spawn
+		player.RespawnLocation = lobbySpawn
+
+		-- Check if the player is already in the queuedPlayers table
+		local isInQueue = false
+		for _, queuedPlayer in ipairs(queuedPlayers) do
+			if queuedPlayer == player then
+				isInQueue = true
+				break
+			end
+		end
+
+		-- If the player is not in the queue, add them
+		if not isInQueue then
+			table.insert(queuedPlayers, player)
+			print('adding player to queue', player)
+			print('new queue: ', queuedPlayers)
+		end
+
+		-- Move the player to the spectator team (if needed)
+		-- player.Team = Teams:WaitForChild('Spectators')
+	end			
 end
 
 
@@ -69,8 +99,8 @@ local function removePlayerFromGame(player)
 		end
 	end
 	
-	--[[ if we haven't deleted the player from the queue (i.e., they don't exist in the queue),
-	we know they are in the active queue and must delete them from it ]]--
+	-- if we haven't deleted the player from the queue (i.e., they don't exist in the queue),
+	-- we know they are in the active queue and must delete them from it
 	if not deletedPlayer then 
 		for playerKey, whichPlayer in ipairs(activePlayers) do
 			if whichPlayer == player then
@@ -133,22 +163,32 @@ function PlayerManager.removePlayerFromQueue(player)
 end
 
 function PlayerManager.addPlayersToActive()
-	for playerKey, whichPlayer in ipairs(queuedPlayers) do
-		table.remove(queuedPlayers, playerKey)
-		table.insert(activePlayers, whichPlayer)
-		whichPlayer.Team = Teams:WaitForChild('Players') -- moving the players to the players team
-	end
+    for i = #queuedPlayers, 1, -1 do
+        local player = queuedPlayers[i]
+        table.remove(queuedPlayers, i)
+        table.insert(activePlayers, player)
+        player.Team = Teams:WaitForChild('Players') -- moving the players to the players team
+    end
 end
 
 function PlayerManager.removePlayersFromActive()
-	for playerKey, whichPlayer in ipairs(activePlayers) do
-		table.remove(activePlayers, playerKey)
-		table.insert(queuedPlayers, whichPlayer)
-		whichPlayer.Team = Teams:WaitForChild('Spectators') -- moving the players to the spectator team
-	end
+    for i = #activePlayers, 1, -1 do
+        local player = activePlayers[i]
+        table.remove(activePlayers, i)
+        table.insert(queuedPlayers, player)
+        player.Team = Teams:WaitForChild('Spectators') -- moving the players to the spectator team
+    end
 end
 
+function PlayerManager.assignGamemaster()
+	local gamemaster = GamemasterChance.selectGamemaster(activePlayers)
+	gamemaster.Team = Teams:WaitForChild('Gamemaster')
+end
 
+function PlayerManager.getGamemaster()
+	local gamemasterTeam = Teams:WaitForChild('Gamemaster')
+	return gamemasterTeam:GetPlayers()[1]
+end
 -- Event Bindings
 Players.PlayerAdded:Connect(onPlayerJoin)
 Players.PlayerRemoving:Connect(removePlayerFromGame) -- when the player leaves, if they are in the queue, remove them

@@ -1,14 +1,7 @@
 local GamemasterChance = {}
 
 -- Services
-local ServerScriptService = game:GetService('ServerScriptService')
 local MarketplaceService = game:GetService('MarketplaceService')
-
--- Module Folders
-local GameModules = ServerScriptService.Server:WaitForChild('GameModules')
-
--- Module Scripts
-local PlayerManager = require(GameModules:WaitForChild('PlayerManager'))
 
 -- Developer Product Id
 local passId = 12345 -- placeholder
@@ -19,8 +12,7 @@ local function hasGamemasterPass(player)
 end
 
 -- Module Functions
-function GamemasterChance.selectGamemaster()
-    local activePlayers = PlayerManager.getActivePlayers()
+function GamemasterChance.selectGamemaster(activePlayers)
     local weights = {}
     local totalWeight = 0
 
