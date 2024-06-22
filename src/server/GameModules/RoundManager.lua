@@ -52,6 +52,9 @@ end
 local function startRound()
 	-- spawn the Gamemaster into the game
 	print("Starting the round...")
+	DisplayManager.updateTimer(0, nil)
+	PlayerManager.spawnGamemasterInGame()
+	task.wait(GameSettings.TRANSITION_DURATION)
 end
 
 local function endRound()
@@ -72,20 +75,6 @@ function RoundManager.initRound()
 	DisplayManager.updateGamemaster(nil, false)
 end
 
---[[
-Prepares for the round by spawning all players (except for the Gamemaster)
-into the chosen map.
-]]
-function RoundManager.prepareRound()
-	print("Preparing the round...")
-	PlayerManager.addPlayersToActive()
-    print('queued players: ', PlayerManager.getQueuedPlayers())
-    print('active players: ', PlayerManager.getActivePlayers())
-	-- getting the gamemaster
-	PlayerManager.assignGamemaster()
-	DisplayManager.updateGamemaster(PlayerManager.getGamemaster(), true) -- this is where we select the gamemaster and get the player
-end
-
 function RoundManager.waitForPlayers()
 	if PlayerManager.getPlayerCount() < GameSettings.MINIMUM_PLAYERS then
         DisplayManager.updateTimer(nil, 'WAITING...')
@@ -104,23 +93,33 @@ function RoundManager.runIntermission()
 	-- DELETE LATER, CAUSE WE NEEDA FIX THIS
 	MapManager.startMapVoting()
 	startTimer(intermissionTimer, GameSettings.INTERMISSION_DURATION, endVoting)
-	task.wait(GameSettings.INTERMISSION_DURATION)
+	task.wait(GameSettings.TRANSITION_DURATION)
 end
 
---[[
-Runs the round.
-]]
+function RoundManager.prepareRound()
+	print("Preparing the round...")
+	PlayerManager.addPlayersToActive()
+    print('queued players: ', PlayerManager.getQueuedPlayers())
+    print('active players: ', PlayerManager.getActivePlayers())
+	-- getting the gamemaster
+	PlayerManager.assignGamemaster()
+	DisplayManager.updateGamemaster(PlayerManager.getGamemaster(), true) -- this is where we select the gamemaster and get the player
+
+	-- spawning the players into the chosen map
+	PlayerManager.spawnPlayersInGame()
+end
+
 function RoundManager.runRound()
 	-- start timer for player headstart timer
 	print("Starting timer for player head start...")
 	DisplayManager.updateTimer(nil, 'ROUND STARTS IN')
 	DisplayManager.updatePlayersLeft(PlayerManager.getPlayerCount(), true)
 	startTimer(playerHeadstartTimer, GameSettings.PLAYER_HEAD_START_DURATION, startRound)
-	task.wait() -- used to ensure that startRound is called before starting the timer
+	task.wait(GameSettings.TRANSITION_DURATION) -- used to ensure that startRound is called before starting the timer
 	print("Starting round timer...")
 	DisplayManager.updateTimer(nil, 'TIME LEFT')
-	startTimer(roundTimer, GameSettings.INTERMISSION_DURATION, endRound)
-	task.wait() -- so that we don't run resetRound before endRound
+	startTimer(roundTimer, GameSettings.INTERMISSION_DURATION, endRound) -- change from intermission to round duration [there for testing purposes]
+	task.wait(GameSettings.TRANSITION_DURATION) -- so that we don't run resetRound before endRound
 end
 
 function RoundManager.resetRound()
@@ -129,6 +128,7 @@ function RoundManager.resetRound()
     print('active players: ', PlayerManager.getActivePlayers())
     print('queued players: ', PlayerManager.getQueuedPlayers())
 	task.wait(GameSettings.TRANSITION_DURATION)
+	PlayerManager.spawnPlayersInLobby()
 	MapManager.removeMap()
 	DisplayManager.updatePlayersLeft(0, false)
 	DisplayManager.updateGamemaster(nil, false)
