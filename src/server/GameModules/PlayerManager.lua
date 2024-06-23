@@ -20,6 +20,7 @@ local lobbySpawn = lobby:WaitForChild('SpawnLocation')
 -- Local Variables
 local activePlayers = {}
 local queuedPlayers = {}
+local connectedPlayers = {}
 
 -- Local Functions
 local function loadLeaderstats(player)
@@ -45,7 +46,34 @@ local function loadLeaderstats(player)
 	roundXP.Value = 0 -- saved value
 end
 
-local function onPlayerJoin()
+local function onCharacterDespawned(character)
+	local player = Players:GetPlayerFromCharacter(character)
+	-- if player is actively in a game, removes from the active queue and places them in the waiting queue
+	PlayerManager.removePlayerFromGame(player) 
+	player.RespawnLocation = lobbySpawn
+end
+
+local function onCharacterSpawned(character)
+	local player = Players:GetPlayerFromCharacter(character)
+end
+
+local function onCharacterRespawn(player)
+	if connectedPlayers[player] then
+		connectedPlayers[player]:Disconnect()
+		connectedPlayers[player] = nil
+	end
+
+	print(player)
+    print('hi, we are removing you')
+    -- Remove player from active players and add to queued players
+    PlayerManager.removePlayerFromGame(player)
+    -- Set the player's respawn location to the lobby
+    player.RespawnLocation = lobbySpawn
+    -- Reload the character
+    player:LoadCharacter()
+end
+
+local function onPlayerAdded()
 	--if a player who creates the server (first player in the game) loads into the game before the player added event can be fired,
 	-- then the actions of the player added event are performed on that player
 
@@ -53,6 +81,7 @@ local function onPlayerJoin()
 		-- check if the player already has leaderstats
 		if not player:FindFirstChild('leaderstats') then
 			loadLeaderstats(player)
+			player.CharacterRemoving:Connect(onCharacterDespawned)
 		end
 
 		-- set the respawn location to the lobby spawn
@@ -74,41 +103,53 @@ local function onPlayerJoin()
 			print('new queue: ', queuedPlayers)
 		end
 
+		-- connect the character removing event so that when a player resets or is eliminated from the game, they are sent back to the lobby
+		-- edge case: if the gamemaster resets, then the game is over, so disabling the gamemaster from resetting maybe?
+		
+		-- connectedPlayers[player] = player.CharacterRemoving:Connect(onCharacterRespawn)
+	
 		-- move the player to the spectator team (if needed)
 		-- player.Team = Teams:WaitForChild('Spectators')
 	end			
 end
 
-
 local function removePlayerFromQueue(player)
-	for playerKey, whichPlayer in ipairs(queuedPlayers) do
-		if whichPlayer == player then
-			table.remove(queuedPlayers, playerKey)
-		end
-	end
-end
-
-local function removePlayerFromGame(player)
 	local deletedPlayer = false
-	for playerKey, whichPlayer in ipairs(queuedPlayers) do
-		if whichPlayer == player then
-			table.remove(queuedPlayers, playerKey)
+	for i = #queuedPlayers, 1, -1 do
+        local queuedPlayer = queuedPlayers[i]
+		if queuedPlayer == player then
+			table.remove(queuedPlayers, i)
+			table.remove(connectedPlayers, i) -- need to remove from connectedPlayers table
 			deletedPlayer = true
-		end
-	end
+			break
+		end  
+    end
 	
 	-- if we haven't deleted the player from the queue (i.e., they don't exist in the queue),
 	-- we know they are in the active queue and must delete them from it
 	if not deletedPlayer then 
-		for playerKey, whichPlayer in ipairs(activePlayers) do
-			if whichPlayer == player then
-				table.remove(activePlayers, playerKey)
-			end
+		for i = #activePlayers, 1, -1 do
+			local activePlayer = activePlayers[i]
+			if activePlayer == player then
+				table.remove(activePlayers, i)
+				table.remove(connectedPlayers, i) -- need to remove from connectedPlayers table
+				break
+			end  
 		end
 	end
+
 end
 
 -- Module Functions
+function PlayerManager.init()
+	print('player init worked')
+	--[[ for _, player in ipairs(Players:GetPlayers()) do
+		player.CharacterRemoving:Connect(function()
+            onCharacterRespawn(player)
+        end)
+	end ]]
+end
+
 function PlayerManager.getPlayer(playerId)
 	for _, player in ipairs(Players:GetPlayers()) do
 		if player.UserId == playerId then
@@ -123,9 +164,10 @@ function PlayerManager.getPlayerCount()
 end
 
 function PlayerManager.removePlayer(player)
-	player.Character:Destroy()
-	for _, item in ipairs(player.Backpack:GetChildren()) do
-		item:Destroy()
+	for playerKey, whichPlayer in ipairs(activePlayers) do
+		if whichPlayer == player then
+			table.remove(activePlayers, playerKey)
+		end
 	end
 end
 
@@ -137,13 +179,16 @@ function PlayerManager.getActivePlayers()
 	return activePlayers
 end
 
-function PlayerManager.removePlayerFromQueue(player)
-	for playerKey, whichPlayer in ipairs(queuedPlayers) do
-		if whichPlayer == player then
-			table.remove(queuedPlayers, playerKey)
-			player.Team = Teams:WaitForChild('Spectators') -- moving the player to the spectator team
-		end
-	end
+function PlayerManager.removePlayerFromGame(player)
+	for i = #activePlayers, 1, -1 do
+        local activePlayer = activePlayers[i]
+		if activePlayer == player then
+			table.remove(activePlayers, i)
+			table.insert(queuedPlayers, player)
+			player.Team = Teams:WaitForChild('Spectators') -- moving the players to the spectator team
+			break
+		end  
+    end
 end
 
 function PlayerManager.addPlayersToActive()
@@ -213,7 +258,7 @@ function PlayerManager.spawnPlayersInLobby()
 end 
 
 -- Event Bindings
-Players.PlayerAdded:Connect(onPlayerJoin)
-Players.PlayerRemoving:Connect(removePlayerFromGame) -- when the player leaves, if they are in the queue, remove them
+Players.PlayerAdded:Connect(onPlayerAdded)
+Players.PlayerRemoving:Connect(removePlayerFromQueue) -- when the player leaves, if they are in the queue, remove them
 
 return PlayerManager

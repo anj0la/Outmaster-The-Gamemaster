@@ -68,6 +68,7 @@ end
 function RoundManager.init()
     GameInit.init()
     DisplayManager.init()
+	PlayerManager.init()
 end
 
 function RoundManager.initRound()
@@ -118,7 +119,7 @@ function RoundManager.runRound()
 	task.wait(GameSettings.TRANSITION_DURATION) -- used to ensure that startRound is called before starting the timer
 	print("Starting round timer...")
 	DisplayManager.updateTimer(nil, 'TIME LEFT')
-	startTimer(roundTimer, GameSettings.INTERMISSION_DURATION, endRound) -- change from intermission to round duration [there for testing purposes]
+	startTimer(roundTimer, GameSettings.ROUND_DURATION, endRound) -- change from intermission to round duration [there for testing purposes]
 	task.wait(GameSettings.TRANSITION_DURATION) -- so that we don't run resetRound before endRound
 end
 
