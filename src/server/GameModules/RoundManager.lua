@@ -68,7 +68,7 @@ end
 function RoundManager.init()
     GameInit.init()
     DisplayManager.init()
-	PlayerManager.init()
+	--PlayerManager.init()
 end
 
 function RoundManager.initRound()
@@ -100,6 +100,7 @@ end
 function RoundManager.prepareRound()
 	print("Preparing the round...")
 	PlayerManager.addPlayersToActive()
+	MapManager.loadMap(PlayerManager.getActivePlayers())
     print('queued players: ', PlayerManager.getQueuedPlayers())
     print('active players: ', PlayerManager.getActivePlayers())
 	-- getting the gamemaster

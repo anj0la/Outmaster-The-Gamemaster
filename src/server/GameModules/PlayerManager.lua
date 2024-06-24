@@ -53,26 +53,6 @@ local function onCharacterDespawned(character)
 	player.RespawnLocation = lobbySpawn
 end
 
-local function onCharacterSpawned(character)
-	local player = Players:GetPlayerFromCharacter(character)
-end
-
-local function onCharacterRespawn(player)
-	if connectedPlayers[player] then
-		connectedPlayers[player]:Disconnect()
-		connectedPlayers[player] = nil
-	end
-
-	print(player)
-    print('hi, we are removing you')
-    -- Remove player from active players and add to queued players
-    PlayerManager.removePlayerFromGame(player)
-    -- Set the player's respawn location to the lobby
-    player.RespawnLocation = lobbySpawn
-    -- Reload the character
-    player:LoadCharacter()
-end
-
 local function onPlayerAdded()
 	--if a player who creates the server (first player in the game) loads into the game before the player added event can be fired,
 	-- then the actions of the player added event are performed on that player
@@ -81,6 +61,8 @@ local function onPlayerAdded()
 		-- check if the player already has leaderstats
 		if not player:FindFirstChild('leaderstats') then
 			loadLeaderstats(player)
+			-- connecting the character removing and onDied events here to ensure they are only connnected once
+			-- might put into Player.init() and run it there
 			player.CharacterRemoving:Connect(onCharacterDespawned)
 		end
 
@@ -143,11 +125,12 @@ end
 -- Module Functions
 function PlayerManager.init()
 	print('player init worked')
-	--[[ for _, player in ipairs(Players:GetPlayers()) do
-		player.CharacterRemoving:Connect(function()
-            onCharacterRespawn(player)
-        end)
-	end ]]
+	-- Event Bindings
+	--Players.PlayerAdded:Connect(onPlayerAdded)
+	--Players.PlayerRemoving:Connect(removePlayerFromQueue) -- when the player leaves, if they are in the queue, remove them
+	for _, player in ipairs(Players:GetPlayers()) do
+		player.CharacterRemoving:Connect(onCharacterDespawned)
+	end 
 end
 
 function PlayerManager.getPlayer(playerId)
@@ -228,24 +211,14 @@ function PlayerManager.spawnPlayersInGame()
 		local character = player.Character
 		local randomIndex = math.random(1, #chosenMapSpawns)
 		character.HumanoidRootPart.CFrame = chosenMapSpawns[randomIndex].CFrame
-        -- player.RespawnLocation = chosenMapSpawns[randomIndex]
-		-- player:LoadCharacter()
     end
 end
 
 function PlayerManager.spawnGamemasterInGame()
 	local gamemaster = PlayerManager.getGamemaster()
 	local character = gamemaster.Character
-
-	-- probably will have a 'GamemasterSpawnLocation' in the map, but for now, will just assign a random index
-	local chosenMapSpawns = workspace:WaitForChild('SpawnLocations'):GetChildren()
-	local randomIndex = math.random(1, #chosenMapSpawns)
-	-- the three lines of code above will be replaced into one line containing the gamemaster spawn when completed
-	print('chosen map spawns', chosenMapSpawns)
-
-	character.HumanoidRootPart.CFrame = chosenMapSpawns[randomIndex].CFrame
-	--gamemaster.RespawnLocation = chosenMapSpawns[randomIndex]
-	--gamemaster:LoadCharacter()
+	local gamemasterSpawnLocation = workspace:WaitForChild('GamemasterSpawnLocation')
+	character.HumanoidRootPart.CFrame = gamemasterSpawnLocation.CFrame
 end
 
 function PlayerManager.spawnPlayersInLobby()
