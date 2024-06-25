@@ -14,7 +14,7 @@ local UpdateTimer = RemoteEvents:FindFirstChild('UpdateTimer')
 local UpdatePlayersLeft = RemoteEvents:FindFirstChild('UpdatePlayersLeft')
 local UpdateGamemasterFrame = RemoteEvents:FindFirstChild('UpdateGamemasterFrame')
 
--- Functions
+-- Module Functions
 function DisplayManager.init()
     if not UpdateTimer then
         UpdateTimer = EventCreator.createEvent('RemoteEvent', 'UpdateTimer', RemoteEvents)

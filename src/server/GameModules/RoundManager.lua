@@ -13,6 +13,7 @@ local DisplayManager = require(GameModules:WaitForChild('DisplayManager'))
 local GameInit = require(GameModules:WaitForChild('GameInit'))
 local GameSettings = require(Configurations:WaitForChild('GameSettings'))
 local MapManager = require(GameModules:WaitForChild('MapManager'))
+local KeyboxManager = require(GameModules:WaitForChild('KeyboxManager'))
 local PlayerManager = require(GameModules:WaitForChild('PlayerManager'))
 local Timer = require(UtilityModules:WaitForChild('Timer'))
 
@@ -68,6 +69,7 @@ end
 function RoundManager.init()
     GameInit.init()
     DisplayManager.init()
+	KeyboxManager.init()
 	--PlayerManager.init()
 end
 
@@ -105,8 +107,11 @@ function RoundManager.prepareRound()
 	PlayerManager.assignGamemaster()
 	DisplayManager.updateGamemaster(PlayerManager.getGamemaster(), true) -- this is where we select the gamemaster and get the player
 
-	-- spawning the players into the chosen map
+	-- spawning the players into the chosen maps
 	PlayerManager.spawnPlayersInGame()
+
+	-- now 
+	KeyboxManager.run(PlayerManager.getActivePlayers())
 end
 
 function RoundManager.runPlayerHeadstart()

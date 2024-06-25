@@ -1,31 +1,32 @@
--- Services
+-- Services --
 local Players = game:GetService('Players')
 local ReplicatedStorage = game:GetService('ReplicatedStorage')
-local StarterGui = game:GetService('StarterGui')
 
--- Guis
+-- Guis --
 local PlayerGui = Players.LocalPlayer:WaitForChild('PlayerGui')
 local StatusDisplayGui = PlayerGui:WaitForChild('StatusDisplayGui')
 
--- Frames
+-- Frames --
 local baseFrame = StatusDisplayGui:WaitForChild('BaseFrame')
 local gamemasterFrame = baseFrame:WaitForChild('GamemasterFrame')
 local playersLeftFrame = baseFrame:WaitForChild('PlayersLeftFrame')
 local timerFrame = baseFrame:WaitForChild('TimerFrame')
 
--- Events
+-- Events --
 local RemoteEvents = ReplicatedStorage.Shared:WaitForChild('RemoteEvents')
 local UpdateGamemasterFrame = RemoteEvents:WaitForChild('UpdateGamemasterFrame')
 local UpdatePlayersLeft = RemoteEvents:WaitForChild('UpdatePlayersLeft')
 local UpdateTimer = RemoteEvents:WaitForChild('UpdateTimer')
 
--- Local Variables
+-- Local Variables --
 local gamemasterImageLabel = gamemasterFrame:WaitForChild('GamemasterImageLabel')
 local playersLeftLabel = playersLeftFrame:WaitForChild('PlayersLeftLabel')
 local statusLabel = timerFrame:WaitForChild('StatusLabel')
 local timerLabel = timerFrame:WaitForChild('TimerLabel')
 
--- Local Functions
+-- Local Functions --
+
+-- Local function to get the gamemaster's thumbnail image to be displayed
 local function getGamemasterThumbnail(gamemaster)
 	-- Fetch the thumbnail
 	local userId = gamemaster.UserId
@@ -37,6 +38,7 @@ local function getGamemasterThumbnail(gamemaster)
 	gamemasterImageLabel.Image = content
 end
 
+-- Local function to update the timer and status labels based on visibility
 local function onUpdateTimer(newTimeLeft, newStatus)
 	if newTimeLeft ~= nil then
 		local minutes = math.floor(newTimeLeft / 60) -- % 60
@@ -48,11 +50,13 @@ local function onUpdateTimer(newTimeLeft, newStatus)
 	end
 end
 
+-- Local function to update the players left label based on visibility
 local function onUpdatePlayersLeft(newPlayersLeft, visible)
 	playersLeftLabel.Text = newPlayersLeft	
 	playersLeftFrame.Visible = visible
 end
 
+-- Local function to update the gamemaster thumbnail based on visibility
 local function onUpdateGamemasterFrame(gamemaster, visible)
 	if gamemaster ~= nil then
 		getGamemasterThumbnail(gamemaster)
@@ -60,7 +64,7 @@ local function onUpdateGamemasterFrame(gamemaster, visible)
 	gamemasterFrame.Visible = visible
 end
 
--- Event Binding
+-- Event Bindings --
 UpdateTimer.OnClientEvent:Connect(onUpdateTimer)
 UpdatePlayersLeft.OnClientEvent:Connect(onUpdatePlayersLeft)
 UpdateGamemasterFrame.OnClientEvent:Connect(onUpdateGamemasterFrame)

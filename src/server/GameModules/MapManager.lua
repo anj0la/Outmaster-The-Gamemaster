@@ -1,33 +1,33 @@
 local MapManager = {}
 
--- Services
+-- Services --
 local ServerScriptService = game:GetService('ServerScriptService')
 local ServerStorage = game:GetService('ServerStorage')
 local ReplicatedStorage = game:GetService('ReplicatedStorage')
 
--- Module Folders
+-- Module Folders --
 local Configurations = ServerScriptService.Server:WaitForChild('Configurations')
 local UtilityModules = ServerScriptService.Server:WaitForChild('UtilityModules')
 
--- EventCreator
+-- EventCreator --
 local EventCreator = require(UtilityModules:WaitForChild('EventCreator'))
 
--- Module Scripts
+-- Module Scripts --
 local GameSettings = require(Configurations:WaitForChild('GameSettings'))
 
--- Maps
+-- Maps --
 local Maps = ServerStorage:WaitForChild('Maps')
 
--- Events
+-- Events --
 local RemoteEvents = ReplicatedStorage.Shared:WaitForChild('RemoteEvents')
 local VotingEvent = RemoteEvents:FindFirstChild('VotingEvent')
 local Voted = RemoteEvents:FindFirstChild('Voted')
 
--- Variables
+-- Variables --
 local playerVotes = {}
 local votableMaps = nil
 
--- Initialization
+-- Initialization --
 if not VotingEvent then
     VotingEvent = EventCreator.createEvent('RemoteEvent', 'VotingEvent', RemoteEvents)
 end
@@ -35,7 +35,9 @@ if not Voted then
     Voted = EventCreator.createEvent('RemoteEvent', 'Voted', RemoteEvents)
 end
 
--- Local Functions
+-- Local Functions --
+
+-- Local function to add a player vote
 local function addPlayerVote(player, mapName)
 	if playerVotes[player] ~= mapName then
 		playerVotes[player] = mapName
@@ -44,6 +46,7 @@ local function addPlayerVote(player, mapName)
 	end
 end
 
+-- Local function to reduce the map voting to the determined limit (3)
 local function reduceMapsToLimit()
 	local maps = Maps:GetChildren()
 	while #maps > GameSettings.MAX_VOTABLE_MAPS do
@@ -52,6 +55,7 @@ local function reduceMapsToLimit()
 	return maps
 end
 
+-- Local function to initalize map voting
 local function initalizeMapVoting()
 	local votes = {}
 	for _, map in pairs(votableMaps) do
@@ -60,6 +64,7 @@ local function initalizeMapVoting()
 	return votes
 end
 
+-- Local function to get the map with the highest votes
 local function getMapWithHighestVotes(votes)
 	local highestVotes = 0
 	local highestVotedFor = nil
@@ -79,6 +84,7 @@ local function getMapWithHighestVotes(votes)
 	return highestVotedFor
 end
 
+-- Function to determine the number of keyboxes to spawn
 local function getNumKeyboxes(activePlayers)
 	local numKeyboxes = nil
 	-- Getting the number of keyboxes
@@ -92,18 +98,20 @@ local function getNumKeyboxes(activePlayers)
 	return numKeyboxes
 end
 
+-- Function to spawn the keyboxes into the chosen map
 local function spawnKeyboxes(numKeyboxes, keyboxSpawnLocations, chosenMap)
 	local keyboxes = Instance.new('Model')
 	keyboxes.Name = 'Keyboxes'
 	local keybox = ServerStorage:WaitForChild('GameObjects'):WaitForChild('Keybox')
 	local children = keyboxSpawnLocations:GetChildren()
 
-	for _ = numKeyboxes, 1, -1 do
+	for i = numKeyboxes, 1, -1 do
 		-- get a random location in the spawn locations
 		local randomIndex = math.random(1, #children)
 		local keyboxSpawn = children[randomIndex]
 		-- clone the keybox and set the position to be the spawn's position
 		local clonedKeybox = keybox:Clone()
+		clonedKeybox.Name = 'Keybox ' .. (numKeyboxes - i + 1)
 		clonedKeybox:PivotTo(CFrame.new(keyboxSpawn.Position))
 
 		-- parenting the keybox into the keyboxes model
@@ -117,7 +125,9 @@ local function spawnKeyboxes(numKeyboxes, keyboxSpawnLocations, chosenMap)
 end
 
 
--- Module Functions
+-- Module Functions --
+
+
 function MapManager.startMapVoting()
 	print('player votes before resetting: ', playerVotes)
 	playerVotes = {}
@@ -159,6 +169,7 @@ function MapManager.selectChosenMap()
 	end
 end
 
+-- Function to load the chosen map into the workspace
 function MapManager.loadMap(activePlayers)
 	local chosenMap = ReplicatedStorage.Shared:WaitForChild('Maps'):GetChildren()[1]
 	local numKeyboxes = getNumKeyboxes(activePlayers)

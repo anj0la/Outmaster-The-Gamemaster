@@ -202,6 +202,11 @@ function PlayerManager.getGamemaster()
 	return gamemasterTeam:GetPlayers()[1]
 end
 
+function PlayerManager.getPlayers()
+	local playersTeam = Teams:WaitForChild('Players')
+	return playersTeam:GetPlayers()
+end
+
 function PlayerManager.spawnPlayersInGame()
 	local chosenMapSpawns = workspace:WaitForChild('SpawnLocations'):GetChildren()
 	print('chosen map spawns', chosenMapSpawns)

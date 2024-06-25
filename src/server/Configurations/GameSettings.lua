@@ -7,5 +7,6 @@ GameSettings.ROUND_DURATION = 5 * 60 -- seconds
 GameSettings.TRANSITION_DURATION = 2 -- seconds
 GameSettings.MAX_VOTABLE_MAPS = 3
 GameSettings.MIN_KEYBOXES = 3
+GameSettings.PROXIMITY_THRESHOLD = 5
 
 return GameSettings
