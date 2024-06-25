@@ -16,6 +16,7 @@ while task.wait() do
 	RoundManager.waitForPlayers()
     RoundManager.runIntermission()
     RoundManager.prepareRound()
+	RoundManager.runPlayerHeadstart()
 	RoundManager.runRound()
 	RoundManager.resetRound()
 end

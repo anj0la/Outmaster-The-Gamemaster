@@ -90,8 +90,6 @@ function RoundManager.runIntermission()
     print('queued players: ', PlayerManager.getQueuedPlayers())
 	DisplayManager.updatePlayersLeft(0, false)
 	DisplayManager.updateTimer(nil, 'INTERMISSION')
-
-	-- DELETE LATER, CAUSE WE NEEDA FIX THIS
 	MapManager.startMapVoting()
 	startTimer(intermissionTimer, GameSettings.INTERMISSION_DURATION, endVoting)
 	task.wait(GameSettings.TRANSITION_DURATION)
@@ -111,17 +109,22 @@ function RoundManager.prepareRound()
 	PlayerManager.spawnPlayersInGame()
 end
 
-function RoundManager.runRound()
-	-- start timer for player headstart timer
+function RoundManager.runPlayerHeadstart()
+-- start timer for player headstart timer
 	print("Starting timer for player head start...")
 	DisplayManager.updateTimer(nil, 'ROUND STARTS IN')
 	DisplayManager.updatePlayersLeft(PlayerManager.getPlayerCount(), true)
 	startTimer(playerHeadstartTimer, GameSettings.PLAYER_HEAD_START_DURATION, startRound)
-	task.wait(GameSettings.TRANSITION_DURATION) -- used to ensure that startRound is called before starting the timer
+	task.wait(GameSettings.TRANSITION_DURATION) 
+end
+
+function RoundManager.runRound()
 	print("Starting round timer...")
 	DisplayManager.updateTimer(nil, 'TIME LEFT')
-	startTimer(roundTimer, GameSettings.ROUND_DURATION, endRound) -- change from intermission to round duration [there for testing purposes]
-	task.wait(GameSettings.TRANSITION_DURATION) -- so that we don't run resetRound before endRound
+	startTimer(roundTimer, GameSettings.ROUND_DURATION, endRound)
+	-- PUT GAME LOGIC HERE
+	-- THIS IS WHERE WE WOULD PROBABLY PUT FPS STUFF
+	task.wait(GameSettings.TRANSITION_DURATION) 
 end
 
 function RoundManager.resetRound()
