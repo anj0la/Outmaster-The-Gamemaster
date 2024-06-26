@@ -12,8 +12,8 @@ local KeyboxGuiEvent = RemoteEvents:WaitForChild('KeyboxGuiEvent')
 
 -- Local Functions
 local function onKeyboxEvent(showGui)
-    print('are you even working?')
     KeyboxGameGui.Enabled = showGui
 end
 
+-- Eevnt Binding -- 
 KeyboxGuiEvent.OnClientEvent:Connect(onKeyboxEvent)

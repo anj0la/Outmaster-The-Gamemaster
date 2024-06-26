@@ -26,6 +26,7 @@ local Voted = RemoteEvents:FindFirstChild('Voted')
 -- Variables --
 local playerVotes = {}
 local votableMaps = nil
+local OFFSET = Vector3.new(0, 5, 0)
 
 -- Initialization --
 if not VotingEvent then
@@ -112,10 +113,14 @@ local function spawnKeyboxes(numKeyboxes, keyboxSpawnLocations, chosenMap)
 		-- clone the keybox and set the position to be the spawn's position
 		local clonedKeybox = keybox:Clone()
 		clonedKeybox.Name = 'Keybox ' .. (numKeyboxes - i + 1)
-		clonedKeybox:PivotTo(CFrame.new(keyboxSpawn.Position))
+		clonedKeybox:PivotTo(CFrame.new(keyboxSpawn.Position + OFFSET))
 
 		-- parenting the keybox into the keyboxes model
 		clonedKeybox.Parent = keyboxes
+
+		-- removing the spawned location from the keybox spawn so that we don't spawn in the same location
+		children[randomIndex]:Destroy()
+		children = keyboxSpawnLocations:GetChildren()
 	end
 
 	-- now we destroy the keybox spawn locations, since we don't need them anymore
