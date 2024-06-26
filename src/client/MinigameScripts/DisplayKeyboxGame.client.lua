@@ -4,27 +4,21 @@ local ReplicatedStorage = game:GetService('ReplicatedStorage')
 
 -- Guis --
 local PlayerGui = Players.LocalPlayer:WaitForChild('PlayerGui')
-local KeyboxGameGui = PlayerGui:WaitForChild('KeyboxGameGui')
-
--- Frames --
-local BaseFrame = KeyboxGameGui:WaitForChild('BaseFrame')
 
 -- Events --
 local RemoteEvents = ReplicatedStorage.Shared:WaitForChild('RemoteEvents')
 local CompletedKeyboxGui  = RemoteEvents:FindFirstChild('CompletedKeyboxGui')
 local KeyboxGuiEvent = RemoteEvents:WaitForChild('KeyboxGuiEvent')
 
--- Buttons -- 
-local Button = BaseFrame:WaitForChild('TextButton')
-
--- Keybox --
-local keyboxObj = nil -- going to be an array of keyboxes probably
+-- Guis --
+local Guis = ReplicatedStorage.Shared:WaitForChild('Guis')
+local KeyboxGames = Guis:WaitForChild('KeyboxGames')
 
 -- Local Functions --
 
 -- Local function to change the activated game text
-local function changeActivateGameText()
-    local activateGame = keyboxObj:WaitForChild('ActivateGame')
+local function changeActivateGameText(keybox)
+    local activateGame = keybox:WaitForChild('ActivateGame')
     local activateGameGui = activateGame:WaitForChild('ActivateGameGui')
     local baseFrame = activateGameGui:WaitForChild('BaseFrame')
     local activateGameLabel = baseFrame:WaitForChild('ActivateGameLabel')
@@ -45,20 +39,43 @@ local function changeActivateGameText()
 
 end
 
--- Local function to display the keyboard game gui
-local function onKeyboxEvent(keybox, showGui)
-    KeyboxGameGui.Enabled = showGui
-    keyboxObj = keybox
+-- Local function to allow the key to be collected
+local function onCompletedGame(keybox)
+    local keyboxGameGui = PlayerGui:FindFirstChild('KeyboxGame_' .. keybox.Name)
+    keyboxGameGui:Destroy()
+    changeActivateGameText(keybox)
+    CompletedKeyboxGui:FireServer(keybox)
 end
 
--- Local function to allow the key to be collected
-local function onButtonClicked()
-    KeyboxGameGui.Enabled = false -- disable the game gui since the game has been completed
-    -- changing the text to indicate that its been solved
-    changeActivateGameText()
-    CompletedKeyboxGui:FireServer(keyboxObj)
+-- Local function to display the keyboard game gui
+local function onKeyboxEvent(keybox, showGui)
+    local keyboxGameGui = PlayerGui:FindFirstChild('KeyboxGame_' .. keybox.Name)
+    
+    if not keyboxGameGui then
+        local keyboxGameTemplate = KeyboxGames:FindFirstChild('KeyboxGame_' .. keybox.Name)
+        if keyboxGameTemplate then
+            keyboxGameGui = keyboxGameTemplate:Clone()
+            keyboxGameGui.Parent = PlayerGui
+        else
+            warn('KeyboxGame GUI template for ' .. keybox.Name .. ' not found!')
+            return
+        end
+    end
+    
+    -- show or hide the GUI
+    keyboxGameGui.Enabled = showGui
+    
+    if showGui then
+        -- set up the button event
+        local button = keyboxGameGui:WaitForChild('BaseFrame'):WaitForChild('TextButton')
+        button.Activated:Connect(function()
+            onCompletedGame(keybox)
+        end)
+    else
+        keyboxGameGui:Destroy()
+    end
 end
+
 
 -- Event Bindings -- 
 KeyboxGuiEvent.OnClientEvent:Connect(onKeyboxEvent)
-Button.Activated:Connect(onButtonClicked)

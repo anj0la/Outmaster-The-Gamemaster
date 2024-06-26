@@ -18,10 +18,16 @@ local RemoteEvents = ReplicatedStorage.Shared:WaitForChild('RemoteEvents')
 local KeyboxGuiEvent  = RemoteEvents:FindFirstChild('KeyboxGuiEvent')
 local CompletedKeyboxGui  = RemoteEvents:FindFirstChild('CompletedKeyboxGui')
 
+-- Guis --
+local Guis = ReplicatedStorage.Shared:WaitForChild('Guis')
+local KeyboxGames = Guis:WaitForChild('KeyboxGames')
+local TemplateKeyboxGames = Guis:WaitForChild('TemplateKeyboxGames')
+
 -- Local Variables -- 
 local assignedKeyboxes = {}
+local unlockedKeyboxes = {}
 local collectedKeyboxes = 0
-local required_keyboxes = nil
+local requiredKeyboxes = nil
 
 -- Local Functions -- 
 
@@ -29,6 +35,51 @@ local function openKeyboxDoor(player, keybox)
     print('Destroying the door so that players can collect the key')
     local door = keybox:WaitForChild('Front')
     door:Destroy()
+
+    unlockedKeyboxes[keybox] = true
+    assignedKeyboxes[keybox] = nil
+end
+
+-- local function getKeyboxGames(keyboxes)
+--     local numKeyboxes = #keyboxes
+--     local keyboxGameGuis = KeyboxGameGuis:GetChildren()
+
+--     -- assign the first three keyboxes specific GUIs
+--     for i = 1, math.min(3, numKeyboxes) do
+--         local keyboxGameGui = keyboxGameGuis[i]
+--         local clonedKeyboxGameGui = keyboxGameGui:Clone()
+--         keyboxGames[keyboxes[i]] = clonedKeyboxGameGui
+--     end
+
+--     -- assign the remaining keyboxes random GUIs
+--     for i = 4, numKeyboxes do
+--         local randomIndex = math.random(1, #keyboxGameGuis)
+--         local keyboxGameGui = keyboxGameGuis[randomIndex]
+--         local clonedKeyboxGameGui = keyboxGameGui:Clone()
+--         keyboxGames[keyboxes[i]] = clonedKeyboxGameGui
+--     end
+-- end
+
+local function getKeyboxGames(keyboxes)
+    local numKeyboxes = #keyboxes
+    local keyboxGameGuis = TemplateKeyboxGames:GetChildren()
+
+    -- assign the first three keyboxes specific GUIs
+    for i = 1, math.min(3, numKeyboxes) do
+        local keybox = keyboxes[i]
+        local keyboxGameGui = keyboxGameGuis[i]:Clone()
+        keyboxGameGui.Name = 'KeyboxGame_' .. keybox.Name
+        keyboxGameGui.Parent = KeyboxGames
+    end
+
+    -- assign the remaining keyboxes random GUIs
+    for i = 4, numKeyboxes do
+        local keybox = keyboxes[i]
+        local randomIndex = math.random(1, #keyboxGameGuis)
+        local keyboxGameGui = keyboxGameGuis[randomIndex]:Clone()
+        keyboxGameGui.Name = 'KeyboxGame_' .. keybox.Name
+        keyboxGameGui.Parent = KeyboxGames
+    end
 end
 
 local function increaseKeyCount()
@@ -54,7 +105,9 @@ end
 
 function KeyboxManager.run(players)
     local keyboxes = workspace:WaitForChild('Keyboxes'):GetChildren()
-    required_keyboxes = #keyboxes
+    requiredKeyboxes = #keyboxes
+
+    getKeyboxGames(keyboxes)
 
     -- here is where we would run our proximity code
     RunService.Heartbeat:Connect(function()
@@ -81,7 +134,7 @@ function KeyboxManager.checkProximity(players, keyboxes)
 
                 -- if the distance is less than the threshold and hasn't been assigned to a player, display the minigame GUI
                 if distance <= GameSettings.PROXIMITY_THRESHOLD then
-                    if not assignedPlayer then 
+                    if not assignedPlayer and not unlockedKeyboxes[keybox] then 
                         KeyboxManager.claimKeybox(player, keybox)
                     end
                 -- otherwise, the player has moved far enough away from the keybox, so unassign them from it
