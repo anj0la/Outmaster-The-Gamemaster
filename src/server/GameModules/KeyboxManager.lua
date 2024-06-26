@@ -16,9 +16,20 @@ local EventCreator = require(UtilityModules:WaitForChild('EventCreator'))
 -- Events --
 local RemoteEvents = ReplicatedStorage.Shared:WaitForChild('RemoteEvents')
 local KeyboxGuiEvent  = RemoteEvents:FindFirstChild('KeyboxGuiEvent')
+local CompletedKeyboxGui  = RemoteEvents:FindFirstChild('CompletedKeyboxGui')
 
 -- Local Variables -- 
 local assignedKeyboxes = {}
+local collectedKeyboxes = 0
+local required_keyboxes = nil
+
+-- Local Functions -- 
+
+local function increaseKeyCount()
+    print('increasing the key count')
+    collectedKeyboxes += 1
+    print('collected keyboxes: ', collectedKeyboxes)
+end
 
 -- Module Functions --
 
@@ -27,11 +38,18 @@ function KeyboxManager.init()
     if not KeyboxGuiEvent  then
         KeyboxGuiEvent  = EventCreator.createEvent('RemoteEvent', 'KeyboxGuiEvent', RemoteEvents)
     end
+    if not CompletedKeyboxGui  then
+        CompletedKeyboxGui  = EventCreator.createEvent('RemoteEvent', 'CompletedKeyboxGui', RemoteEvents)
+    end
+
+    -- Event Bindings --
+    CompletedKeyboxGui.OnServerEvent:Connect(increaseKeyCount)
 end
 
 function KeyboxManager.run(players)
     local keyboxes = workspace:WaitForChild('Keyboxes'):GetChildren()
-   
+    required_keyboxes = #keyboxes
+
     -- here is where we would run our proximity code
     RunService.Heartbeat:Connect(function()
         KeyboxManager.checkProximity(players, keyboxes)
