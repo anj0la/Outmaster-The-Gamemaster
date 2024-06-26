@@ -25,6 +25,12 @@ local required_keyboxes = nil
 
 -- Local Functions -- 
 
+local function openKeyboxDoor(player, keybox)
+    print('Destroying the door so that players can collect the key')
+    local door = keybox:WaitForChild('Front')
+    door:Destroy()
+end
+
 local function increaseKeyCount()
     print('increasing the key count')
     collectedKeyboxes += 1
@@ -35,15 +41,15 @@ end
 
 -- Function to initalize the keybox manager module by creating the required event and running the proximity check
 function KeyboxManager.init()
-    if not KeyboxGuiEvent  then
+    if not KeyboxGuiEvent then
         KeyboxGuiEvent  = EventCreator.createEvent('RemoteEvent', 'KeyboxGuiEvent', RemoteEvents)
     end
-    if not CompletedKeyboxGui  then
+    if not CompletedKeyboxGui then
         CompletedKeyboxGui  = EventCreator.createEvent('RemoteEvent', 'CompletedKeyboxGui', RemoteEvents)
     end
 
     -- Event Bindings --
-    CompletedKeyboxGui.OnServerEvent:Connect(increaseKeyCount)
+    CompletedKeyboxGui.OnServerEvent:Connect(openKeyboxDoor)
 end
 
 function KeyboxManager.run(players)
@@ -91,14 +97,14 @@ end
 function KeyboxManager.claimKeybox(player, keybox)
     print('running the claim code')
     assignedKeyboxes[keybox] = player
-    KeyboxGuiEvent:FireClient(player, true) -- show GUI
+    KeyboxGuiEvent:FireClient(player, keybox, true) -- show GUI
 end
 
 -- Function to release a keybox
 function KeyboxManager.releaseKeybox(player, keybox)
     print('running the released code')
     assignedKeyboxes[keybox] = nil
-    KeyboxGuiEvent:FireClient(player, false) -- hide GUI
+    KeyboxGuiEvent:FireClient(player, keybox, false) -- hide GUI
 end
 
 return KeyboxManager

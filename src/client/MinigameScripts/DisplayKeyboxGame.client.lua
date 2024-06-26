@@ -17,16 +17,20 @@ local KeyboxGuiEvent = RemoteEvents:WaitForChild('KeyboxGuiEvent')
 -- Buttons -- 
 local Button = BaseFrame:WaitForChild('TextButton')
 
+-- Keybox --
+local keyboxObj = nil -- going to be an array of keyboxes probably
+
 -- Local Functions --
 
 -- Local function to display the keyboard game gui
-local function onKeyboxEvent(showGui)
+local function onKeyboxEvent(keybox, showGui)
     KeyboxGameGui.Enabled = showGui
+    keyboxObj = keybox
 end
 
 -- Local function to increase the key count
 local function onButtonClicked()
-    CompletedKeyboxGui:FireServer(1)
+    CompletedKeyboxGui:FireServer(keyboxObj)
 end
 
 -- Event Bindings -- 
