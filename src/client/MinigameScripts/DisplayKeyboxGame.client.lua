@@ -9,6 +9,7 @@ local PlayerGui = Players.LocalPlayer:WaitForChild('PlayerGui')
 local RemoteEvents = ReplicatedStorage.Shared:WaitForChild('RemoteEvents')
 local CompletedKeyboxGui  = RemoteEvents:FindFirstChild('CompletedKeyboxGui')
 local KeyboxGuiEvent = RemoteEvents:WaitForChild('KeyboxGuiEvent')
+local IncreaseKeyCount = RemoteEvents:FindFirstChild('IncreaseKeyCount')
 
 -- Guis --
 local Guis = ReplicatedStorage.Shared:WaitForChild('Guis')
@@ -39,9 +40,32 @@ local function changeActivateGameText(keybox)
 
 end
 
+-- Local function to collect the key
+local function onCollectedKey(player, keybox)
+    print('player who collected the key: ', player)
+    local key = keybox:WaitForChild('Key')
+    
+    -- destroying the key (along with the prompt) to indicate that it has been 'collected'
+    key:Destroy()
+
+    -- increasing the key count (which will be unlocked from the server side)
+    IncreaseKeyCount:FireServer()
+    
+end
+
 -- Local function to allow the key to be collected
 local function onCompletedGame(keybox)
     local keyboxGameGui = PlayerGui:FindFirstChild('KeyboxGame_' .. keybox.Name)
+
+    -- enabling the proximity prompt
+    local proximityPrompt = keybox:WaitForChild('Key'):WaitForChild('ProximityPrompt')
+    proximityPrompt.Enabled = true
+
+    -- adding event to collect the key (and destroy it afterwards)
+    proximityPrompt.Triggered:Connect(function(player)
+    onCollectedKey(player, keybox)
+    end)
+
     keyboxGameGui:Destroy()
     changeActivateGameText(keybox)
     CompletedKeyboxGui:FireServer(keybox)
@@ -75,6 +99,8 @@ local function onKeyboxEvent(keybox, showGui)
         keyboxGameGui:Destroy()
     end
 end
+
+-- Local Function to enable the proximity prompt
 
 
 -- Event Bindings -- 

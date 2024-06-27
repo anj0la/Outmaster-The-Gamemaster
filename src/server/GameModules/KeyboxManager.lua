@@ -15,8 +15,9 @@ local EventCreator = require(UtilityModules:WaitForChild('EventCreator'))
 
 -- Events --
 local RemoteEvents = ReplicatedStorage.Shared:WaitForChild('RemoteEvents')
-local KeyboxGuiEvent  = RemoteEvents:FindFirstChild('KeyboxGuiEvent')
-local CompletedKeyboxGui  = RemoteEvents:FindFirstChild('CompletedKeyboxGui')
+local KeyboxGuiEvent = RemoteEvents:FindFirstChild('KeyboxGuiEvent')
+local CompletedKeyboxGui = RemoteEvents:FindFirstChild('CompletedKeyboxGui')
+local IncreaseKeyCount = RemoteEvents:FindFirstChild('IncreaseKeyCount')
 
 -- Guis --
 local Guis = ReplicatedStorage.Shared:WaitForChild('Guis')
@@ -40,26 +41,6 @@ local function openKeyboxDoor(player, keybox)
     assignedKeyboxes[keybox] = nil
 end
 
--- local function getKeyboxGames(keyboxes)
---     local numKeyboxes = #keyboxes
---     local keyboxGameGuis = KeyboxGameGuis:GetChildren()
-
---     -- assign the first three keyboxes specific GUIs
---     for i = 1, math.min(3, numKeyboxes) do
---         local keyboxGameGui = keyboxGameGuis[i]
---         local clonedKeyboxGameGui = keyboxGameGui:Clone()
---         keyboxGames[keyboxes[i]] = clonedKeyboxGameGui
---     end
-
---     -- assign the remaining keyboxes random GUIs
---     for i = 4, numKeyboxes do
---         local randomIndex = math.random(1, #keyboxGameGuis)
---         local keyboxGameGui = keyboxGameGuis[randomIndex]
---         local clonedKeyboxGameGui = keyboxGameGui:Clone()
---         keyboxGames[keyboxes[i]] = clonedKeyboxGameGui
---     end
--- end
-
 local function getKeyboxGames(keyboxes)
     local numKeyboxes = #keyboxes
     local keyboxGameGuis = TemplateKeyboxGames:GetChildren()
@@ -82,10 +63,15 @@ local function getKeyboxGames(keyboxes)
     end
 end
 
-local function increaseKeyCount()
+local function increaseKeyCount(player)
     print('increasing the key count')
     collectedKeyboxes += 1
     print('collected keyboxes: ', collectedKeyboxes)
+    
+    if collectedKeyboxes >= requiredKeyboxes then
+        print('fire event to ALL clients to open the secret door and make it accessible for players')
+        -- OpenSecretDoor:FireClients()     
+    end
 end
 
 -- Module Functions --
@@ -93,14 +79,18 @@ end
 -- Function to initalize the keybox manager module by creating the required event and running the proximity check
 function KeyboxManager.init()
     if not KeyboxGuiEvent then
-        KeyboxGuiEvent  = EventCreator.createEvent('RemoteEvent', 'KeyboxGuiEvent', RemoteEvents)
+        KeyboxGuiEvent = EventCreator.createEvent('RemoteEvent', 'KeyboxGuiEvent', RemoteEvents)
     end
     if not CompletedKeyboxGui then
-        CompletedKeyboxGui  = EventCreator.createEvent('RemoteEvent', 'CompletedKeyboxGui', RemoteEvents)
+        CompletedKeyboxGui = EventCreator.createEvent('RemoteEvent', 'CompletedKeyboxGui', RemoteEvents)
+    end
+    if not IncreaseKeyCount then
+        IncreaseKeyCount = EventCreator.createEvent('RemoteEvent', 'IncreaseKeyCount', RemoteEvents)
     end
 
     -- Event Bindings --
     CompletedKeyboxGui.OnServerEvent:Connect(openKeyboxDoor)
+    IncreaseKeyCount.OnServerEvent:Connect(increaseKeyCount)
 end
 
 function KeyboxManager.run(players)
