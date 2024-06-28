@@ -100,11 +100,15 @@ local function getNumKeyboxes(activePlayers)
 end
 
 -- Function to spawn the keyboxes into the chosen map
-local function spawnKeyboxes(numKeyboxes, keyboxSpawnLocations, chosenMap)
-	local keyboxes = Instance.new('Model')
-	keyboxes.Name = 'Keyboxes'
+local function spawnKeyboxes(numKeyboxes, chosenMap)
+	local keyboxSpawnLocations = chosenMap:WaitForChild('KeyboxSpawnLocations')
 	local keybox = ServerStorage:WaitForChild('GameObjects'):WaitForChild('Keybox')
 	local children = keyboxSpawnLocations:GetChildren()
+
+	-- creating the model that will contain all of the keyboxes
+	local keyboxes = Instance.new('Model')
+	keyboxes.Name = 'Keyboxes'
+	keyboxes.Parent = chosenMap
 
 	for i = numKeyboxes, 1, -1 do
 		-- get a random location in the spawn locations
@@ -125,10 +129,23 @@ local function spawnKeyboxes(numKeyboxes, keyboxSpawnLocations, chosenMap)
 
 	-- now we destroy the keybox spawn locations, since we don't need them anymore
 	keyboxSpawnLocations:Destroy()
-	-- make sure to parent keyboxes to the chosen maps folder
-	keyboxes.Parent = chosenMap
+
 end
 
+-- Local function to spawn the secret room
+local function spawnSecretRoom(chosenMap)
+	local secretRoomSpawnLocation = chosenMap:WaitForChild('SecretRoomSpawnLocation')
+	local secretRoom = ServerStorage:WaitForChild('GameObjects'):WaitForChild('SecretRoom')
+
+	-- cloning the secret room and setting its position
+	local clonedSecretRoom = secretRoom:Clone()
+	clonedSecretRoom.Name = 'Secret Room'
+	clonedSecretRoom.Parent = chosenMap
+	clonedSecretRoom:PivotTo(CFrame.new(secretRoomSpawnLocation.Position + OFFSET))
+
+	-- destroying the secret room spawn location, since we don't need it anymore
+	secretRoomSpawnLocation:Destroy()
+end
 
 -- Module Functions --
 
@@ -178,10 +195,13 @@ end
 function MapManager.loadMap(activePlayers)
 	local chosenMap = ReplicatedStorage.Shared:WaitForChild('Maps'):GetChildren()[1]
 	local numKeyboxes = getNumKeyboxes(activePlayers)
-	local keyboxSpawnLocations = chosenMap:WaitForChild('KeyboxSpawnLocations')
+	--local keyboxSpawnLocations = chosenMap:WaitForChild('KeyboxSpawnLocations')
 
 	-- spawning the keyboxes
-	spawnKeyboxes(numKeyboxes, keyboxSpawnLocations, chosenMap)
+	spawnKeyboxes(numKeyboxes, chosenMap)
+
+	-- spawning the secret room
+	spawnSecretRoom(chosenMap)
 
 	-- now, cloning the map with the spawned keyboxes
 	local clonedMap = chosenMap:Clone()
