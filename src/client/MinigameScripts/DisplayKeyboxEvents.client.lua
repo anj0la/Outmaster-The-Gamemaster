@@ -5,11 +5,16 @@ local ReplicatedStorage = game:GetService('ReplicatedStorage')
 -- Guis --
 local PlayerGui = Players.LocalPlayer:WaitForChild('PlayerGui')
 
--- Events --
+-- Remote Events --
 local RemoteEvents = ReplicatedStorage.Shared:WaitForChild('RemoteEvents')
-local CompletedKeyboxGui  = RemoteEvents:FindFirstChild('CompletedKeyboxGui')
+local CompletedKeyboxGui = RemoteEvents:WaitForChild('CompletedKeyboxGui')
 local KeyboxGuiEvent = RemoteEvents:WaitForChild('KeyboxGuiEvent')
-local IncreaseKeyCount = RemoteEvents:FindFirstChild('IncreaseKeyCount')
+local IncreaseKeyCount = RemoteEvents:WaitForChild('IncreaseKeyCount')
+local OpenSecretDoor = RemoteEvents:WaitForChild('OpenSecretDoor')
+
+-- Remote Functions --
+local RemoteFunctions = ReplicatedStorage.Shared:WaitForChild('RemoteFunctions')
+local CloneToolFunction = RemoteFunctions:WaitForChild('CloneToolFunction')
 
 -- Guis --
 local Guis = ReplicatedStorage.Shared:WaitForChild('Guis')
@@ -41,9 +46,8 @@ local function changeActivateGameText(keybox)
 end
 
 -- Local function to collect the key
-local function onCollectedKey(player, keybox)
+local function onCollectedKey(player, key)
     print('player who collected the key: ', player)
-    local key = keybox:WaitForChild('Key')
     
     -- destroying the key (along with the prompt) to indicate that it has been 'collected'
     key:Destroy()
@@ -56,14 +60,15 @@ end
 -- Local function to allow the key to be collected
 local function onCompletedGame(keybox)
     local keyboxGameGui = PlayerGui:FindFirstChild('KeyboxGame_' .. keybox.Name)
+    local key = keybox:WaitForChild('Key')
 
     -- enabling the proximity prompt
-    local proximityPrompt = keybox:WaitForChild('Key'):WaitForChild('ProximityPrompt')
+    local proximityPrompt = key:WaitForChild('ProximityPrompt')
     proximityPrompt.Enabled = true
 
     -- adding event to collect the key (and destroy it afterwards)
     proximityPrompt.Triggered:Connect(function(player)
-    onCollectedKey(player, keybox)
+    onCollectedKey(player, key)
     end)
 
     keyboxGameGui:Destroy()
@@ -73,7 +78,11 @@ end
 
 -- Local function to display the keyboard game gui
 local function onKeyboxEvent(keybox, showGui)
+    print(keybox)
+    print(showGui)
     local keyboxGameGui = PlayerGui:FindFirstChild('KeyboxGame_' .. keybox.Name)
+    print('did we fire??? here is the keybox: ', keybox)
+    print('show gui: ', showGui)
     
     if not keyboxGameGui then
         local keyboxGameTemplate = KeyboxGames:FindFirstChild('KeyboxGame_' .. keybox.Name)
@@ -100,8 +109,36 @@ local function onKeyboxEvent(keybox, showGui)
     end
 end
 
--- Local Function to enable the proximity prompt
+local function onCollectedGoldenHammer(player, goldenHammer)
+    goldenHammer:Destroy()
+    -- call the RemoteFunction to clone the tool to the player's backpack
+    local success = CloneToolFunction:InvokeServer()
+    if success then
+        print('Tool successfully cloned to backpack.') -- delete later
+    else
+        warn('Failed to clone tool to backpack.')
+    end
 
+end
+
+-- Local Function to enable the proximity prompt
+local function onOpenSecretDoor(secretRoom)
+    local front = secretRoom:WaitForChild('Front')
+    local goldenHammer = secretRoom:WaitForChild('GoldenHammer')
+    local proximityPrompt = goldenHammer:WaitForChild('ProximityPrompt')
+
+    -- enabling the proximity prompt
+    proximityPrompt.Enabled = true
+
+    -- adding event to collect the hammer (and destroy it afterwards)
+    proximityPrompt.Triggered:Connect(function(player)
+        onCollectedGoldenHammer(player, goldenHammer)
+        end)
+    
+
+    front:Destroy()
+end
 
 -- Event Bindings -- 
 KeyboxGuiEvent.OnClientEvent:Connect(onKeyboxEvent)
+OpenSecretDoor.OnClientEvent:Connect(onOpenSecretDoor)

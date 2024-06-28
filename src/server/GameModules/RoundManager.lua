@@ -110,7 +110,8 @@ function RoundManager.prepareRound()
 	-- spawning the players into the chosen maps
 	PlayerManager.spawnPlayersInGame()
 
-	-- now 
+	-- CHANGE FROM GETACTICEPLAYERS TO GETPLAYERS (because get active players includes the gamemaster, getplayers doesn't include it)
+	-- only keeping it rn for testing purposes
 	KeyboxManager.run(PlayerManager.getActivePlayers())
 end
 

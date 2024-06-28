@@ -4,6 +4,7 @@ local KeyboxManager = {}
 local ReplicatedStorage = game:GetService('ReplicatedStorage')
 local RunService = game:GetService('RunService')
 local ServerScriptService = game:GetService('ServerScriptService')
+local ServerStorage = game:GetService('ServerStorage')
 
 -- Module Folders --
 local Configurations = ServerScriptService.Server:WaitForChild('Configurations')
@@ -11,13 +12,18 @@ local UtilityModules = ServerScriptService.Server:WaitForChild('UtilityModules')
 
 -- Module Scripts --
 local GameSettings = require(Configurations:WaitForChild('GameSettings'))
-local EventCreator = require(UtilityModules:WaitForChild('EventCreator'))
+local InstanceFactory = require(UtilityModules:WaitForChild('InstanceFactory'))
 
--- Events --
+-- Remote Events --
 local RemoteEvents = ReplicatedStorage.Shared:WaitForChild('RemoteEvents')
 local KeyboxGuiEvent = RemoteEvents:FindFirstChild('KeyboxGuiEvent')
 local CompletedKeyboxGui = RemoteEvents:FindFirstChild('CompletedKeyboxGui')
 local IncreaseKeyCount = RemoteEvents:FindFirstChild('IncreaseKeyCount')
+local OpenSecretDoor = RemoteEvents:FindFirstChild('OpenSecretDoor')
+
+-- Remote Functions --
+local RemoteFunctions = ReplicatedStorage.Shared:WaitForChild('RemoteFunctions')
+local CloneToolFunction = RemoteFunctions:FindFirstChild('CloneToolFunction')
 
 -- Guis --
 local Guis = ReplicatedStorage.Shared:WaitForChild('Guis')
@@ -67,30 +73,55 @@ local function increaseKeyCount(player)
     print('increasing the key count')
     collectedKeyboxes += 1
     print('collected keyboxes: ', collectedKeyboxes)
-    
+
     if collectedKeyboxes >= requiredKeyboxes then
+        local secretRoom = workspace:WaitForChild('SecretRoom')
         print('fire event to ALL clients to open the secret door and make it accessible for players')
-        -- OpenSecretDoor:FireClients()     
+        OpenSecretDoor:FireAllClients(secretRoom)     
     end
 end
+
+local function cloneToolToPlayer(player, toolName)
+    -- check if the tool exists in ServerStorage
+    local tool = ServerStorage:WaitForChild('Tools'):FindFirstChild(toolName)
+    if tool then
+        -- clone the tool
+        local clonedTool = tool:Clone()
+        -- parent the cloned tool to the player's backpack
+        clonedTool.Parent = player:WaitForChild('Backpack')
+        return true
+    else
+        warn('Tool not found in ServerStorage.')
+        return false
+    end
+end 
 
 -- Module Functions --
 
 -- Function to initalize the keybox manager module by creating the required event and running the proximity check
 function KeyboxManager.init()
     if not KeyboxGuiEvent then
-        KeyboxGuiEvent = EventCreator.createEvent('RemoteEvent', 'KeyboxGuiEvent', RemoteEvents)
+        KeyboxGuiEvent = InstanceFactory.createInstance('RemoteEvent', 'KeyboxGuiEvent', RemoteEvents)
     end
     if not CompletedKeyboxGui then
-        CompletedKeyboxGui = EventCreator.createEvent('RemoteEvent', 'CompletedKeyboxGui', RemoteEvents)
+        CompletedKeyboxGui = InstanceFactory.createInstance('RemoteEvent', 'CompletedKeyboxGui', RemoteEvents)
     end
     if not IncreaseKeyCount then
-        IncreaseKeyCount = EventCreator.createEvent('RemoteEvent', 'IncreaseKeyCount', RemoteEvents)
+        IncreaseKeyCount = InstanceFactory.createInstance('RemoteEvent', 'IncreaseKeyCount', RemoteEvents)
+    end
+    if not OpenSecretDoor then
+        OpenSecretDoor = InstanceFactory.createInstance('RemoteEvent', 'OpenSecretDoor', RemoteEvents)
+    end
+    if not CloneToolFunction then
+        CloneToolFunction = InstanceFactory.createInstance('RemoteFunction', 'CloneToolFunction', RemoteFunctions)
     end
 
     -- Event Bindings --
     CompletedKeyboxGui.OnServerEvent:Connect(openKeyboxDoor)
     IncreaseKeyCount.OnServerEvent:Connect(increaseKeyCount)
+    CloneToolFunction.OnServerInvoke = function(player)
+        return cloneToolToPlayer(player, 'Golden Hammer')
+    end
 end
 
 function KeyboxManager.run(players)

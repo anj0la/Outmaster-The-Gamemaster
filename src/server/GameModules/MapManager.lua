@@ -9,8 +9,8 @@ local ReplicatedStorage = game:GetService('ReplicatedStorage')
 local Configurations = ServerScriptService.Server:WaitForChild('Configurations')
 local UtilityModules = ServerScriptService.Server:WaitForChild('UtilityModules')
 
--- EventCreator --
-local EventCreator = require(UtilityModules:WaitForChild('EventCreator'))
+-- Instance Factory --
+local InstanceFactory = require(UtilityModules:WaitForChild('InstanceFactory'))
 
 -- Module Scripts --
 local GameSettings = require(Configurations:WaitForChild('GameSettings'))
@@ -18,7 +18,7 @@ local GameSettings = require(Configurations:WaitForChild('GameSettings'))
 -- Maps --
 local Maps = ServerStorage:WaitForChild('Maps')
 
--- Events --
+-- Remote Events --
 local RemoteEvents = ReplicatedStorage.Shared:WaitForChild('RemoteEvents')
 local VotingEvent = RemoteEvents:FindFirstChild('VotingEvent')
 local Voted = RemoteEvents:FindFirstChild('Voted')
@@ -30,10 +30,10 @@ local OFFSET = Vector3.new(0, 5, 0)
 
 -- Initialization --
 if not VotingEvent then
-    VotingEvent = EventCreator.createEvent('RemoteEvent', 'VotingEvent', RemoteEvents)
+    VotingEvent = InstanceFactory.createInstance('RemoteEvent', 'VotingEvent', RemoteEvents)
 end
 if not Voted then
-    Voted = EventCreator.createEvent('RemoteEvent', 'Voted', RemoteEvents)
+    Voted = InstanceFactory.createInstance('RemoteEvent', 'Voted', RemoteEvents)
 end
 
 -- Local Functions --
@@ -139,7 +139,7 @@ local function spawnSecretRoom(chosenMap)
 
 	-- cloning the secret room and setting its position
 	local clonedSecretRoom = secretRoom:Clone()
-	clonedSecretRoom.Name = 'Secret Room'
+	clonedSecretRoom.Name = 'SecretRoom'
 	clonedSecretRoom.Parent = chosenMap
 	clonedSecretRoom:PivotTo(CFrame.new(secretRoomSpawnLocation.Position + OFFSET))
 
