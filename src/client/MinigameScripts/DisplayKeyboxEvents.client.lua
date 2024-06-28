@@ -62,9 +62,14 @@ local function onCompletedGame(keybox)
     local keyboxGameGui = PlayerGui:FindFirstChild('KeyboxGame_' .. keybox.Name)
     local key = keybox:WaitForChild('Key')
 
-    -- enabling the proximity prompt
-    local proximityPrompt = key:WaitForChild('ProximityPrompt')
-    proximityPrompt.Enabled = true
+     -- creating a proximity prompt and parenting it the key
+     local proximityPrompt = Instance.new('ProximityPrompt')
+     proximityPrompt.Name = 'ProximityPrompt'
+     proximityPrompt.HoldDuration = 1
+     proximityPrompt.ObjectText = 'Golden Key'
+     proximityPrompt.ActionText = 'Collect Key'
+     proximityPrompt.Enabled = true
+     proximityPrompt.Parent = key
 
     -- adding event to collect the key (and destroy it afterwards)
     proximityPrompt.Triggered:Connect(function(player)
@@ -125,10 +130,15 @@ end
 local function onOpenSecretDoor(secretRoom)
     local front = secretRoom:WaitForChild('Front')
     local goldenHammer = secretRoom:WaitForChild('GoldenHammer')
-    local proximityPrompt = goldenHammer:WaitForChild('ProximityPrompt')
 
-    -- enabling the proximity prompt
+    -- creating a proximity prompt and parenting it the golden hammer
+    local proximityPrompt = Instance.new('ProximityPrompt')
+    proximityPrompt.Name = 'ProximityPrompt'
+    proximityPrompt.HoldDuration = 1
+    proximityPrompt.ObjectText = 'Golden Hammer'
+    proximityPrompt.ActionText = 'Obtain Golden Hammer'
     proximityPrompt.Enabled = true
+    proximityPrompt.Parent = goldenHammer
 
     -- adding event to collect the hammer (and destroy it afterwards)
     proximityPrompt.Triggered:Connect(function(player)
