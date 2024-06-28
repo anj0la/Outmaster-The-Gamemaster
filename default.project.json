@@ -26,6 +26,13 @@
         "Client": {
           "$path": "src/client"
         }
+      },
+
+      "StarterCharacterScripts": {
+        "$className": "StarterCharacterScripts",
+        "Character": {
+          "$path": "src/character"
+        }
       }
     },
 
