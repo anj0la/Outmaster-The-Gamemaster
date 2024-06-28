@@ -1,37 +1,39 @@
 local RoundManager = {}
 
--- Services
+-- Services --
 local ServerScriptService = game:GetService('ServerScriptService')
 
--- Module Folders
+-- Module Folders --
 local Configurations = ServerScriptService.Server:WaitForChild('Configurations')
 local GameModules = ServerScriptService.Server:WaitForChild('GameModules')
 local UtilityModules = ServerScriptService.Server:WaitForChild('UtilityModules')
 
--- Module Scripts
+-- Module Scripts --
 local DisplayManager = require(GameModules:WaitForChild('DisplayManager'))
 local GameInit = require(GameModules:WaitForChild('GameInit'))
 local GameSettings = require(Configurations:WaitForChild('GameSettings'))
 local MapManager = require(GameModules:WaitForChild('MapManager'))
 local KeyboxManager = require(GameModules:WaitForChild('KeyboxManager'))
 local PlayerManager = require(GameModules:WaitForChild('PlayerManager'))
+local TeamManager = require(GameModules:WaitForChild('TeamManager'))
 local Timer = require(UtilityModules:WaitForChild('Timer'))
 
--- Objects
+-- Objects --
 local intermissionTimer = Timer.new()
 local playerHeadstartTimer = Timer.new()
 local roundTimer = Timer.new()
 
--- Local Functions
+-- Local Functions --
+
+-- Local function to start a timer for the specified duration, running the callback function at the end
 local function startTimer(timer, duration, callback)
-    -- If a connection exists, then we skip this step
-    -- This is done to avoid creating multiple connections to a timer object
+    -- if a connection exists, then we skip this step, done to avoid creating multiple connections to a timer object
 	if not timer._connection then
 		timer._connection = timer.finished:Connect(callback)
 	end
 	timer:start(duration)
     
-    -- Updating the display status with the time left
+    -- updating the display status with the time left
 	while timer:isRunning() do
 		local _timeLeft = (math.floor(timer:getTimeLeft() + 1))
 		DisplayManager.updateTimer(_timeLeft, nil)
@@ -65,7 +67,9 @@ local function endRound()
 	-- displays winner or something 
 end
 
--- Module Functions
+-- Module Functions --
+
+-- Function to initialize all events needed for multiple rounds (only needs to be called once)
 function RoundManager.init()
     GameInit.init()
     DisplayManager.init()
@@ -73,11 +77,13 @@ function RoundManager.init()
 	--PlayerManager.init()
 end
 
+-- Function to initialize a round
 function RoundManager.initRound()
 	DisplayManager.updatePlayersLeft(0, false)
 	DisplayManager.updateGamemaster(nil, false)
 end
 
+-- Function to wait for the required amount of players
 function RoundManager.waitForPlayers()
 	if PlayerManager.getPlayerCount() < GameSettings.MINIMUM_PLAYERS then
         DisplayManager.updateTimer(nil, 'WAITING...')
@@ -87,6 +93,7 @@ function RoundManager.waitForPlayers()
     end
 end
 
+-- Function to run intermission
 function RoundManager.runIntermission()
 	print("Running intermission code")
     print('queued players: ', PlayerManager.getQueuedPlayers())
@@ -97,18 +104,24 @@ function RoundManager.runIntermission()
 	task.wait(GameSettings.TRANSITION_DURATION)
 end
 
+-- Function to prepare the round after ending map voting and sending players into the game
 function RoundManager.prepareRound()
 	print("Preparing the round...")
 	PlayerManager.addPlayersToActive()
 	MapManager.loadMap(PlayerManager.getActivePlayers())
     print('queued players: ', PlayerManager.getQueuedPlayers())
     print('active players: ', PlayerManager.getActivePlayers())
+
+	-- team mamanger code will go here
+	-- initalizing the team manager (sets the gamemaster and players)
+	TeamManager.init(PlayerManager.getActivePlayers())
 	-- getting the gamemaster
-	PlayerManager.assignGamemaster()
-	DisplayManager.updateGamemaster(PlayerManager.getGamemaster(), true) -- this is where we select the gamemaster and get the player
+	--PlayerManager.assignGamemaster()
+	DisplayManager.updateGamemaster(TeamManager.getGamemaster(), true) -- this is where we select the gamemaster and get the player
 
 	-- spawning the players into the chosen maps
-	PlayerManager.spawnPlayersInGame()
+	TeamManager.spawnPlayersInGame()
+	--PlayerManager.spawnPlayersInGame()
 
 	-- CHANGE FROM GETACTICEPLAYERS TO GETPLAYERS (because get active players includes the gamemaster, getplayers doesn't include it)
 	-- only keeping it rn for testing purposes
@@ -139,7 +152,8 @@ function RoundManager.resetRound()
     print('active players: ', PlayerManager.getActivePlayers())
     print('queued players: ', PlayerManager.getQueuedPlayers())
 	task.wait(GameSettings.TRANSITION_DURATION)
-	PlayerManager.spawnPlayersInLobby()
+	TeamManager.spawnPlayersInLobby(PlayerManager.getQueuedPlayers())
+	-- PlayerManager.spawnPlayersInLobby()
 	MapManager.removeMap()
 	DisplayManager.updatePlayersLeft(0, false)
 	DisplayManager.updateGamemaster(nil, false)

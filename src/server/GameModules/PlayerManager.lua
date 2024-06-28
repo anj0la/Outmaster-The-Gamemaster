@@ -1,7 +1,6 @@
 local PlayerManager = {}
 
 -- Services
-local ReplicatedStorage = game:GetService('ReplicatedStorage')
 local Players = game:GetService('Players')
 local ServerScriptService = game:GetService('ServerScriptService')
 local Teams = game:GetService('Teams')
@@ -168,7 +167,8 @@ function PlayerManager.removePlayerFromGame(player)
 		if activePlayer == player then
 			table.remove(activePlayers, i)
 			table.insert(queuedPlayers, player)
-			player.Team = Teams:WaitForChild('Spectators') -- moving the players to the spectator team
+			-- create bindable event here to remove player from team, and update number of players on team left
+			player.Team = Teams:WaitForChild('Spectators') -- moving the players to the spectator team ()
 			break
 		end  
     end
@@ -179,7 +179,6 @@ function PlayerManager.addPlayersToActive()
         local player = queuedPlayers[i]
         table.remove(queuedPlayers, i)
         table.insert(activePlayers, player)
-        player.Team = Teams:WaitForChild('Players') -- moving the players to the players team
     end
 end
 
@@ -188,52 +187,8 @@ function PlayerManager.removePlayersFromActive()
         local player = activePlayers[i]
         table.remove(activePlayers, i)
         table.insert(queuedPlayers, player)
-        player.Team = Teams:WaitForChild('Spectators') -- moving the players to the spectator team
     end
 end
-
-function PlayerManager.assignGamemaster()
-	local gamemaster = GamemasterChance.selectGamemaster(activePlayers)
-	gamemaster.Team = Teams:WaitForChild('Gamemaster')
-end
-
-function PlayerManager.getGamemaster()
-	local gamemasterTeam = Teams:WaitForChild('Gamemaster')
-	return gamemasterTeam:GetPlayers()[1]
-end
-
-function PlayerManager.getPlayers()
-	local playersTeam = Teams:WaitForChild('Players')
-	return playersTeam:GetPlayers()
-end
-
-function PlayerManager.spawnPlayersInGame()
-	local chosenMapSpawns = workspace:WaitForChild('SpawnLocations'):GetChildren()
-	print('chosen map spawns', chosenMapSpawns)
-	local players = Teams:WaitForChild('Players'):GetPlayers()
-	for i = #players, 1, -1 do
-        local player = players[i]
-		local character = player.Character
-		local randomIndex = math.random(1, #chosenMapSpawns)
-		character.HumanoidRootPart.CFrame = chosenMapSpawns[randomIndex].CFrame
-    end
-end
-
-function PlayerManager.spawnGamemasterInGame()
-	local gamemaster = PlayerManager.getGamemaster()
-	local character = gamemaster.Character
-	local gamemasterSpawnLocation = workspace:WaitForChild('GamemasterSpawnLocation')
-	character.HumanoidRootPart.CFrame = gamemasterSpawnLocation.CFrame
-end
-
-function PlayerManager.spawnPlayersInLobby()
-	-- we run this code AFTER the players have been assigned back to the waiting queue
-	for i = #queuedPlayers, 1, -1 do
-        local player = queuedPlayers[i]
-		local character = player.Character
-		character.HumanoidRootPart.CFrame = lobbySpawn.CFrame
-    end
-end 
 
 -- Event Bindings
 Players.PlayerAdded:Connect(onPlayerAdded)

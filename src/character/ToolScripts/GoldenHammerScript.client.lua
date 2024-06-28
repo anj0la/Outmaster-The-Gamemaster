@@ -1,4 +1,4 @@
--- Services --
+--[[ -- Services --
 local Players = game:GetService('Players')
 local ReplicatedStorage = game:GetService('ReplicatedStorage')
 
@@ -71,3 +71,4 @@ end
 -- Event Bindings --
 goldenHammer.Equipped:Connect(onEquipped)
 goldenHammer.Activated:Connect(onActivated)
+ ]]
