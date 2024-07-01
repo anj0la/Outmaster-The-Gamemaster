@@ -1,27 +1,20 @@
 local PlayerManager = {}
 
--- Services
+-- Services --
 local Players = game:GetService('Players')
 local ServerScriptService = game:GetService('ServerScriptService')
 local Teams = game:GetService('Teams')
 
--- Module Folders
-local UtilityModules = ServerScriptService.Server:WaitForChild('UtilityModules')
-
--- Module Scripts
-local GamemasterChance = require(UtilityModules:WaitForChild('GamemasterChance'))
--- local ReplicatedStorage = game:GetService('ReplicatedStorage)
-
--- Map Variables (ONLY USED FOR RESPAWNING)
+-- Map Variables --
 local lobby = workspace:WaitForChild('Lobby')
 local lobbySpawn = lobby:WaitForChild('SpawnLocation')
 
--- Local Variables
+-- Local Variables --
 local activePlayers = {}
 local queuedPlayers = {}
 local connectedPlayers = {}
 
--- Local Functions
+-- Local Functions --
 local function loadLeaderstats(player)
 	-- Setup leaderboard stats
 	local leaderstats = Instance.new('Model')

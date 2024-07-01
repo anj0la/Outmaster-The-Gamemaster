@@ -83,11 +83,14 @@ end
 
 local function cloneToolToPlayer(player, toolName)
     -- check if the tool exists in ServerStorage
-    local tool = ServerStorage:WaitForChild('Tools'):FindFirstChild(toolName)
+    local tool = ServerStorage:WaitForChild('Tools'):WaitForChild(toolName)
+    local toolScript = ServerStorage:WaitForChild('ToolScripts'):WaitForChild('GoldenHammerScript')
     if tool then
-        -- clone the tool
+        -- clone the tool and script
         local clonedTool = tool:Clone()
-        -- parent the cloned tool to the player's backpack
+        local clonedToolScript = toolScript:Clone()
+        -- parent the cloned script to the cloned tool and the cloned tool to the player's backpack
+        clonedToolScript.Parent = clonedTool
         clonedTool.Parent = player:WaitForChild('Backpack')
         return true
     else

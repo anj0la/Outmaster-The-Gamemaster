@@ -120,6 +120,9 @@ local function onCollectedGoldenHammer(player, goldenHammer)
     local success = CloneToolFunction:InvokeServer()
     if success then
         print('Tool successfully cloned to backpack.') -- delete later
+        -- fire event to run local script
+        -- local characterFolder = player:Character:WaitForChild('Character')
+        -- local goldenHammerScript = 
     else
         warn('Failed to clone tool to backpack.')
     end
@@ -145,7 +148,6 @@ local function onOpenSecretDoor(secretRoom)
         onCollectedGoldenHammer(player, goldenHammer)
         end)
     
-
     front:Destroy()
 end
 

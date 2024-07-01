@@ -56,7 +56,7 @@ local function startRound()
 	-- spawn the Gamemaster into the game
 	print("Starting the round...")
 	DisplayManager.updateTimer(0, nil)
-	PlayerManager.spawnGamemasterInGame()
+	TeamManager.spawnGamemasterInGame()
 	task.wait(GameSettings.TRANSITION_DURATION)
 end
 
@@ -75,6 +75,7 @@ function RoundManager.init()
     DisplayManager.init()
 	KeyboxManager.init()
 	--PlayerManager.init()
+	TeamManager.init()
 end
 
 -- Function to initialize a round
@@ -114,7 +115,7 @@ function RoundManager.prepareRound()
 
 	-- team mamanger code will go here
 	-- initalizing the team manager (sets the gamemaster and players)
-	TeamManager.init(PlayerManager.getActivePlayers())
+	TeamManager.initTeams(PlayerManager.getActivePlayers())
 	-- getting the gamemaster
 	--PlayerManager.assignGamemaster()
 	DisplayManager.updateGamemaster(TeamManager.getGamemaster(), true) -- this is where we select the gamemaster and get the player
@@ -143,11 +144,23 @@ function RoundManager.runRound()
 	startTimer(roundTimer, GameSettings.ROUND_DURATION, endRound)
 	-- PUT GAME LOGIC HERE
 	-- THIS IS WHERE WE WOULD PROBABLY PUT FPS STUFF
+	-- when team manager thing ends, we need to fire an event that makes the timer go to 0, to fire the endRound
+	-- so we'll need to use a bindable event called EndRound that fires once the Gamemaster has been killed or all the players have been
+	-- killed
+	-- so here, we need to have checks every minute or so to see if EndRound has been fired. If not, then we wait for a second before checking again.
+	-- or maybe we check every second? not sure
+	-- while roundTimer:IsRunning() do
+	--   stuff = EndRound:Wait() -- waiting until the end is over (and getting the players / gamemaster winner)
+	-- 	 break
+	-- winner = stuff
+	--  stopTimer(roundTimer)
+	--  startTimer(roundTimer, 0, nil) -- already have a connection, done to fire the endRound event
 	task.wait(GameSettings.TRANSITION_DURATION) 
 end
 
 function RoundManager.resetRound()
 	print("Resetting the round...")
+	-- winner = nil
 	DisplayManager.updateTimer(0, 'ENDING GAME')
     print('active players: ', PlayerManager.getActivePlayers())
     print('queued players: ', PlayerManager.getQueuedPlayers())
