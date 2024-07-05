@@ -17,6 +17,7 @@ local RemoteEvents = ReplicatedStorage.Shared:WaitForChild('RemoteEvents')
 local UpdateGamemasterFrame = RemoteEvents:WaitForChild('UpdateGamemasterFrame')
 local UpdatePlayersLeft = RemoteEvents:WaitForChild('UpdatePlayersLeft')
 local UpdateTimer = RemoteEvents:WaitForChild('UpdateTimer')
+local DisplayGamemasterRoleInfo = RemoteEvents:WaitForChild('DisplayGamemasterRoleInfo')
 
 -- Local Variables --
 local gamemasterImageLabel = gamemasterFrame:WaitForChild('GamemasterImageLabel')
@@ -64,7 +65,14 @@ local function onUpdateGamemasterFrame(gamemaster, visible)
 	gamemasterFrame.Visible = visible
 end
 
+local function onDisplayGamemasterRoleInfo(gamemaster, visible)
+	print('adding display gui here when finished')
+	print('gamemaster: ', gamemaster)
+	print('visibility: ', visible)
+end
+
 -- Event Bindings --
 UpdateTimer.OnClientEvent:Connect(onUpdateTimer)
 UpdatePlayersLeft.OnClientEvent:Connect(onUpdatePlayersLeft)
 UpdateGamemasterFrame.OnClientEvent:Connect(onUpdateGamemasterFrame)
+DisplayGamemasterRoleInfo.OnClientEvent:Connect(onDisplayGamemasterRoleInfo)

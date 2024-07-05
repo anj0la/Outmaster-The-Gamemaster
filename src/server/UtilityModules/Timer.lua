@@ -1,6 +1,7 @@
 local Timer = {}
 Timer.__index = Timer
 
+-- Function to create a new timer object
 function Timer.new()
 	local self = setmetatable({}, Timer)
 
@@ -15,6 +16,7 @@ function Timer.new()
 	return self
 end
 
+-- Function to start a timer
 function Timer:start(duration)
 	if not self._running then
 		task.spawn(function()
@@ -35,6 +37,7 @@ function Timer:start(duration)
 	end
 end
 
+-- Function to get the time left on a timer object
 function Timer:getTimeLeft()
 	if self._running then
 		local now = tick()
@@ -48,10 +51,12 @@ function Timer:getTimeLeft()
 	end
 end
 
+-- Function to check if the timer is running
 function Timer:isRunning()
 	return self._running
 end
 
+-- Function to stop a timer
 function Timer:stop()
 	self._running = false
 end

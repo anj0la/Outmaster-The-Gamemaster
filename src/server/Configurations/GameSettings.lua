@@ -8,5 +8,6 @@ GameSettings.TRANSITION_DURATION = 2 -- seconds
 GameSettings.MAX_VOTABLE_MAPS = 3
 GameSettings.MIN_KEYBOXES = 3
 GameSettings.PROXIMITY_THRESHOLD = 5
+GameSettings.BASE_WEIGHT = 1
 
 return GameSettings

@@ -41,11 +41,12 @@ local function handleGoldenHammerDamage(hitPlayer, attacker)
                 hitHumanoid.Health = 0
                 -- add additional logic to end the round here
                 -- EndRound:Fire(gamemaster)
+                -- {endGame = true, winner = attacker}
             elseif hitTeam == Teams:WaitForChild('Players') then
                 -- kill both players and drop the hammer
                 hitHumanoid.Health = 0
                 attackerHumanoid.Health = 0
-                
+                -- {endGame = false, winner = nil}
                 local hammerClone = attacker.Backpack:FindFirstChild('Golden Hammer'):Clone()
                 hammerClone.Parent = workspace
                 hammerClone.Handle.Position = attacker.Character.HumanoidRootPart.Position

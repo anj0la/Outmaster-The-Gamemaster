@@ -1,22 +1,37 @@
 local GamemasterChance = {}
 
--- Services
+-- Services --
 local MarketplaceService = game:GetService('MarketplaceService')
 
--- Developer Product Id
+-- Local Variables --
 local passId = 12345 -- placeholder
+-- local weights = {}
+-- Local Functions --
 
--- Local Functions
+-- Local function to check if the player has the gamemaster x2 pass
 local function hasGamemasterPass(player)
     return MarketplaceService:UserOwnsGamePassAsync(player.UserId, passId) ~= nil -- returns true if the child was found and returns false if the child was not found
 end
 
--- Module Functions
+-- Module Functions --
+
+
+--[[ function GamemasterChance.initWeights(activePlayers)
+    for _, player in ipairs(activePlayers) do
+        local weight = 1
+        if hasGamemasterPass(player) then -- increase the weights by 2
+            weight = weight * 2
+        end
+        table.insert(weights, {player = player, weight = weight})
+    end
+end ]]
+
+-- Function to select the gamemaster
 function GamemasterChance.selectGamemaster(activePlayers)
     local weights = {}
     local totalWeight = 0
 
-    -- Assign weights to each player
+    -- assign weights to each player
     for _, player in ipairs(activePlayers) do
         local weight = 1
         if hasGamemasterPass(player) then -- increase the weights by 2
@@ -26,11 +41,11 @@ function GamemasterChance.selectGamemaster(activePlayers)
         totalWeight = totalWeight + weight
     end
 
-    -- Generate a random number between 1 and the total weight
+    -- generate a random number between 1 and the total weight
     local randomWeight = math.random() * totalWeight
     local cumulativeWeight = 0
 
-    -- Select the player based on the random weight
+    -- select the player based on the random weight
     for _, entry in ipairs(weights) do
         cumulativeWeight = cumulativeWeight + entry.weight
         if randomWeight <= cumulativeWeight then

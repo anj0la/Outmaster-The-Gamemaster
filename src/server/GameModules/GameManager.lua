@@ -1,4 +1,4 @@
-local RoundManager = {}
+local GameManager = {}
 
 -- Services --
 local ServerScriptService = game:GetService('ServerScriptService')
@@ -56,6 +56,8 @@ local function startRound()
 	-- spawn the Gamemaster into the game
 	print("Starting the round...")
 	DisplayManager.updateTimer(0, nil)
+	-- removing the gui from the gamemaster
+	DisplayManager.displayGamemasterRoleInfo(TeamManager.getGamemaster(), false)
 	TeamManager.spawnGamemasterInGame()
 	task.wait(GameSettings.TRANSITION_DURATION)
 end
@@ -70,7 +72,7 @@ end
 -- Module Functions --
 
 -- Function to initialize all events needed for multiple rounds (only needs to be called once)
-function RoundManager.init()
+function GameManager.init()
     GameInit.init()
     DisplayManager.init()
 	KeyboxManager.init()
@@ -78,14 +80,8 @@ function RoundManager.init()
 	TeamManager.init()
 end
 
--- Function to initialize a round
-function RoundManager.initRound()
-	DisplayManager.updatePlayersLeft(0, false)
-	DisplayManager.updateGamemaster(nil, false)
-end
-
 -- Function to wait for the required amount of players
-function RoundManager.waitForPlayers()
+function GameManager.waitForPlayers()
 	if PlayerManager.getPlayerCount() < GameSettings.MINIMUM_PLAYERS then
         DisplayManager.updateTimer(nil, 'WAITING...')
     end
@@ -95,7 +91,7 @@ function RoundManager.waitForPlayers()
 end
 
 -- Function to run intermission
-function RoundManager.runIntermission()
+function GameManager.runIntermission()
 	print("Running intermission code")
     print('queued players: ', PlayerManager.getQueuedPlayers())
 	DisplayManager.updatePlayersLeft(0, false)
@@ -106,39 +102,39 @@ function RoundManager.runIntermission()
 end
 
 -- Function to prepare the round after ending map voting and sending players into the game
-function RoundManager.prepareRound()
+function GameManager.prepareRound()
 	print("Preparing the round...")
 	PlayerManager.addPlayersToActive()
 	MapManager.loadMap(PlayerManager.getActivePlayers())
     print('queued players: ', PlayerManager.getQueuedPlayers())
     print('active players: ', PlayerManager.getActivePlayers())
 
-	-- team mamanger code will go here
 	-- initalizing the team manager (sets the gamemaster and players)
 	TeamManager.initTeams(PlayerManager.getActivePlayers())
-	-- getting the gamemaster
-	--PlayerManager.assignGamemaster()
 	DisplayManager.updateGamemaster(TeamManager.getGamemaster(), true) -- this is where we select the gamemaster and get the player
 
 	-- spawning the players into the chosen maps
 	TeamManager.spawnPlayersInGame()
-	--PlayerManager.spawnPlayersInGame()
 
 	-- CHANGE FROM GETACTICEPLAYERS TO GETPLAYERS (because get active players includes the gamemaster, getplayers doesn't include it)
 	-- only keeping it rn for testing purposes
 	KeyboxManager.run(PlayerManager.getActivePlayers())
 end
 
-function RoundManager.runPlayerHeadstart()
+function GameManager.runPlayerHeadstart()
 -- start timer for player headstart timer
 	print("Starting timer for player head start...")
 	DisplayManager.updateTimer(nil, 'ROUND STARTS IN')
 	DisplayManager.updatePlayersLeft(PlayerManager.getPlayerCount(), true)
+	DisplayManager.displayGamemasterRoleInfo(TeamManager.getGamemaster(), true)
+	
 	startTimer(playerHeadstartTimer, GameSettings.PLAYER_HEAD_START_DURATION, startRound)
+	-- displaying information to the gamemaster
+	
 	task.wait(GameSettings.TRANSITION_DURATION) 
 end
 
-function RoundManager.runRound()
+function GameManager.runRound()
 	print("Starting round timer...")
 	DisplayManager.updateTimer(nil, 'TIME LEFT')
 	startTimer(roundTimer, GameSettings.ROUND_DURATION, endRound)
@@ -158,7 +154,7 @@ function RoundManager.runRound()
 	task.wait(GameSettings.TRANSITION_DURATION) 
 end
 
-function RoundManager.resetRound()
+function GameManager.resetRound()
 	print("Resetting the round...")
 	-- winner = nil
 	DisplayManager.updateTimer(0, 'ENDING GAME')
@@ -171,4 +167,4 @@ function RoundManager.resetRound()
 	DisplayManager.updatePlayersLeft(0, false)
 	DisplayManager.updateGamemaster(nil, false)
 end
-return RoundManager
+return GameManager
