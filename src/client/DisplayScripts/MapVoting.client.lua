@@ -1,37 +1,30 @@
--- Services
+-- Services --
 local Players = game:GetService('Players')
 local ReplicatedStorage = game:GetService('ReplicatedStorage')
-local PlayerGui = Players.LocalPlayer:WaitForChild('PlayerGui')
 
--- Events
+-- Guis --
+local PlayerGui = Players.LocalPlayer:WaitForChild('PlayerGui')
+local MapVotingGui = PlayerGui:WaitForChild('MapVotingGui')
+
+-- Events --
 local RemoteEvents = ReplicatedStorage.Shared:WaitForChild('RemoteEvents')
 local VotingEvent = RemoteEvents:WaitForChild('VotingEvent')
 local Voted = RemoteEvents:WaitForChild('Voted')
 
--- Gui
-local mapVotingGui = PlayerGui:WaitForChild('MapVotingGui')
+-- Frames --
+local BaseFrame = MapVotingGui:WaitForChild('BaseFrame')
+local MapFrames = BaseFrame:WaitForChild('MapFrames')
 
--- Frames
-local baseFrame = mapVotingGui:WaitForChild('BaseFrame')
-local mapFrames = baseFrame:WaitForChild('MapFrames')
-
--- Local Variables
+-- Local Variables --
 local COOLDOWN_TIME = 0.5
 local buttonCooldowns = {}
 
--- Local Functions
-local function updateMapFrame(map, mapFrame)
-	local mapName = map.Name
-	-- Update the map frame details here
-end
+-- Local Functions --
 
-local function fireSelectedMap(map)
-	Voted:FireServer(map.Name)
-end
-
-local function getMapFrames()
+-- Local function that gets all the map frames in the parent Frame MapFrames 
+local function getAllMapFrames()
     local maps = {}
-    local children = mapFrames:GetChildren()
+    local children = MapFrames:GetChildren()
     for _, child in children do
         if child:IsA('Frame') then
             table.insert(maps, child)
@@ -40,6 +33,7 @@ local function getMapFrames()
     return maps
 end
 
+-- Local function to handle clicking the voting button on a map
 local function onButtonClicked(map, button)
 	if buttonCooldowns[button] then return end
 	buttonCooldowns[button] = true  -- Start cooldown for this button
@@ -50,28 +44,31 @@ local function onButtonClicked(map, button)
 	buttonCooldowns[button] = false  -- End cooldown for this button
 end
 
+-- Local function to handle the voting event
 local function onHandleVotingEvent(visible)
     local votableMaps = ReplicatedStorage.Shared:WaitForChild('Maps'):GetChildren()
-    local allMapFrames = getMapFrames()
-	mapVotingGui.Enabled = visible
+    local allMapFrames = getAllMapFrames()
+	MapVotingGui.Enabled = visible -- change this code so that when its not visible, we don't run this
 
     for i, map in ipairs(votableMaps) do
         local frame = allMapFrames[i]
         local button = frame.TextButton
         button.Active = visible
 
+        -- changing each frame's name, label, numvotes and image to the votable maps
         frame.Name = map.Name
         frame.MapNameLabel.Text = map.Name
         frame.NumVotesLabel.Text = '0'
         -- TODO - frame.MapImageLabel.Image = 'rbxassetid://' .. map.Configuration.ImageId.Value
 
-        if not buttonCooldowns[button] then  -- Connect the event only once
+        if not buttonCooldowns[button] then  -- connect the event only once
             button.Activated:Connect(function()
                 onButtonClicked(map, button)
             end)
-            buttonCooldowns[button] = false  -- Initialize cooldown state
+            buttonCooldowns[button] = false  -- initialize cooldown state
         end
-    
+
+        -- making the text buttons active (clickable)
         for _, child in pairs(allMapFrames) do
 			if child:IsA('Frame') then
 				child.TextButton.Active = visible
@@ -80,10 +77,11 @@ local function onHandleVotingEvent(visible)
 	end
 end
 
+-- Local function to add a vote to the GUI
 local function addVoteToGui(playerVotes)
 	print('player votes after clicking button', playerVotes)
 	local votes = {}
-    local allMapFrames = getMapFrames()
+    local allMapFrames = getAllMapFrames()
 	for _, votedMap in pairs(playerVotes) do
 		if not votes[votedMap] then -- the first time a player has voted for the map
 			votes[votedMap] = 1
@@ -92,6 +90,7 @@ local function addVoteToGui(playerVotes)
 		end	
 	end
 
+
 	for _, child in pairs(allMapFrames) do
         if child:IsA('Frame') then
 			child.NumVotesLabel.Text = (votes[child.Name] or 0)
@@ -99,6 +98,6 @@ local function addVoteToGui(playerVotes)
 	end
 end
 
--- Event Bindings
+-- Event Bindings --
 VotingEvent.OnClientEvent:Connect(onHandleVotingEvent)
 Voted.OnClientEvent:Connect(addVoteToGui)

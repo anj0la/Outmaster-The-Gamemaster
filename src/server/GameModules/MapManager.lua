@@ -1,41 +1,44 @@
 local MapManager = {}
 
--- Services
+-- Services --
 local ServerScriptService = game:GetService('ServerScriptService')
 local ServerStorage = game:GetService('ServerStorage')
 local ReplicatedStorage = game:GetService('ReplicatedStorage')
 
--- Module Folders
+-- Module Folders --
 local Configurations = ServerScriptService.Server:WaitForChild('Configurations')
 local UtilityModules = ServerScriptService.Server:WaitForChild('UtilityModules')
 
--- EventCreator
-local EventCreator = require(UtilityModules:WaitForChild('EventCreator'))
+-- Instance Factory --
+local InstanceFactory = require(UtilityModules:WaitForChild('InstanceFactory'))
 
--- Module Scripts
+-- Module Scripts --
 local GameSettings = require(Configurations:WaitForChild('GameSettings'))
 
--- Maps
+-- Maps --
 local Maps = ServerStorage:WaitForChild('Maps')
 
--- Events
+-- Remote Events --
 local RemoteEvents = ReplicatedStorage.Shared:WaitForChild('RemoteEvents')
 local VotingEvent = RemoteEvents:FindFirstChild('VotingEvent')
 local Voted = RemoteEvents:FindFirstChild('Voted')
 
--- Variables
+-- Variables --
 local playerVotes = {}
 local votableMaps = nil
+local OFFSET = Vector3.new(0, 5, 0)
 
--- Initialization
+-- Initialization --
 if not VotingEvent then
-    VotingEvent = EventCreator.createEvent('RemoteEvent', 'VotingEvent', RemoteEvents)
+    VotingEvent = InstanceFactory.createInstance('RemoteEvent', 'VotingEvent', RemoteEvents)
 end
 if not Voted then
-    Voted = EventCreator.createEvent('RemoteEvent', 'Voted', RemoteEvents)
+    Voted = InstanceFactory.createInstance('RemoteEvent', 'Voted', RemoteEvents)
 end
 
--- Local Functions
+-- Local Functions --
+
+-- Local function to add a player vote
 local function addPlayerVote(player, mapName)
 	if playerVotes[player] ~= mapName then
 		playerVotes[player] = mapName
@@ -44,6 +47,7 @@ local function addPlayerVote(player, mapName)
 	end
 end
 
+-- Local function to reduce the map voting to the determined limit (3)
 local function reduceMapsToLimit()
 	local maps = Maps:GetChildren()
 	while #maps > GameSettings.MAX_VOTABLE_MAPS do
@@ -52,6 +56,7 @@ local function reduceMapsToLimit()
 	return maps
 end
 
+-- Local function to initalize map voting
 local function initalizeMapVoting()
 	local votes = {}
 	for _, map in pairs(votableMaps) do
@@ -60,6 +65,7 @@ local function initalizeMapVoting()
 	return votes
 end
 
+-- Local function to get the map with the highest votes
 local function getMapWithHighestVotes(votes)
 	local highestVotes = 0
 	local highestVotedFor = nil
@@ -79,29 +85,85 @@ local function getMapWithHighestVotes(votes)
 	return highestVotedFor
 end
 
-local function loadMap()
-	local chosenMap = ReplicatedStorage.Shared:WaitForChild('Maps'):GetChildren()[1]
-    local clonedMap = chosenMap:Clone()
-	for _, child in pairs(clonedMap:GetChildren()) do
-		child.Parent = workspace
+-- Function to determine the number of keyboxes to spawn
+local function getNumKeyboxes(activePlayers)
+	local numKeyboxes = nil
+	-- Getting the number of keyboxes
+	if #activePlayers >= 8 then
+		numKeyboxes = GameSettings.MIN_KEYBOXES + 2
+	elseif #activePlayers < 8 and #activePlayers >= 6 then -- 6-7 active players (5-6 players and 1 gamemaster)
+		numKeyboxes = GameSettings.MIN_KEYBOXES + 1
+	else -- 4-5 active players (3-4 players and 1 gamemaster)
+		numKeyboxes = GameSettings.MIN_KEYBOXES
 	end
+	return numKeyboxes
 end
 
--- Module Functions
+-- Function to spawn the keyboxes into the chosen map
+local function spawnKeyboxes(numKeyboxes, chosenMap)
+	local keyboxSpawnLocations = chosenMap:WaitForChild('KeyboxSpawnLocations')
+	local keybox = ServerStorage:WaitForChild('GameObjects'):WaitForChild('Keybox')
+	local children = keyboxSpawnLocations:GetChildren()
+
+	-- creating the model that will contain all of the keyboxes
+	local keyboxes = Instance.new('Model')
+	keyboxes.Name = 'Keyboxes'
+	keyboxes.Parent = chosenMap
+
+	for i = numKeyboxes, 1, -1 do
+		-- get a random location in the spawn locations
+		local randomIndex = math.random(1, #children)
+		local keyboxSpawn = children[randomIndex]
+		-- clone the keybox and set the position to be the spawn's position
+		local clonedKeybox = keybox:Clone()
+		clonedKeybox.Name = 'Keybox ' .. (numKeyboxes - i + 1)
+		clonedKeybox:PivotTo(CFrame.new(keyboxSpawn.Position + OFFSET))
+
+		-- parenting the keybox into the keyboxes model
+		clonedKeybox.Parent = keyboxes
+
+		-- removing the spawned location from the keybox spawn so that we don't spawn in the same location
+		children[randomIndex]:Destroy()
+		children = keyboxSpawnLocations:GetChildren()
+	end
+
+	-- now we destroy the keybox spawn locations, since we don't need them anymore
+	keyboxSpawnLocations:Destroy()
+
+end
+
+-- Local function to spawn the secret room
+local function spawnSecretRoom(chosenMap)
+	local secretRoomSpawnLocation = chosenMap:WaitForChild('SecretRoomSpawnLocation')
+	local secretRoom = ServerStorage:WaitForChild('GameObjects'):WaitForChild('SecretRoom')
+
+	-- cloning the secret room and setting its position
+	local clonedSecretRoom = secretRoom:Clone()
+	clonedSecretRoom.Name = 'SecretRoom'
+	clonedSecretRoom.Parent = chosenMap
+	clonedSecretRoom:PivotTo(CFrame.new(secretRoomSpawnLocation.Position + OFFSET))
+
+	-- destroying the secret room spawn location, since we don't need it anymore
+	secretRoomSpawnLocation:Destroy()
+end
+
+-- Module Functions --
+
+
 function MapManager.startMapVoting()
 	print('player votes before resetting: ', playerVotes)
 	playerVotes = {}
 	print('player votes after resetting: ', playerVotes)
 	votableMaps = reduceMapsToLimit()
 	
-	-- Replicating the selected maps to vote for to ReplicatedStorage
+	-- replicating the selected maps to vote for to ReplicatedStorage
     local maps = ReplicatedStorage.Shared:WaitForChild('Maps')
 	for _, map in pairs(votableMaps) do
 		local clonedMap = map:Clone()
 		clonedMap.Parent = maps
 	end
 	
-    -- We fire true to make the map voting gui visible
+    -- we fire true to make the map voting gui visible
 	VotingEvent:FireAllClients(true)
 end
 
@@ -109,26 +171,45 @@ function MapManager.selectChosenMap()
 	local votes = initalizeMapVoting()
 	
 	print('selecting chosen map with playerVotes: ', playerVotes)
-	-- Count votes from players
+	-- count votes from players
 	for _, votedMap in pairs(playerVotes) do
-		-- Increment the vote count for the selected map
+		-- increment the vote count for the selected map
 		if votes[votedMap] then
 			votes[votedMap] += 1
 		end
 	end
-	-- Chose the map with the highest amount of votes
+	-- chose the map with the highest amount of votes
 	local chosenMap = getMapWithHighestVotes(votes)
 	print('Chosen Map: ', chosenMap)
 	
-	-- Delete the maps not voted for in ReplicatedStorage
+	-- delete the maps not voted for in ReplicatedStorage
 	local votingMaps = ReplicatedStorage.Shared:WaitForChild('Maps')
 	for _, map in pairs(votingMaps:GetChildren()) do
 		if map.Name ~= chosenMap then
 			map:Destroy()
 		end
 	end
-	
-	loadMap()
+end
+
+-- Function to load the chosen map into the workspace
+function MapManager.loadMap(activePlayers)
+	local chosenMap = ReplicatedStorage.Shared:WaitForChild('Maps'):GetChildren()[1]
+	local numKeyboxes = getNumKeyboxes(activePlayers)
+	--local keyboxSpawnLocations = chosenMap:WaitForChild('KeyboxSpawnLocations')
+
+	-- spawning the keyboxes
+	spawnKeyboxes(numKeyboxes, chosenMap)
+
+	-- spawning the secret room
+	spawnSecretRoom(chosenMap)
+
+	-- now, cloning the map with the spawned keyboxes
+	local clonedMap = chosenMap:Clone()
+
+	-- loading the map into the game
+	for _, child in pairs(clonedMap:GetChildren()) do
+		child.Parent = workspace
+	end
 end
 
 function MapManager.endMapVoting()
@@ -136,9 +217,11 @@ function MapManager.endMapVoting()
 end
 
 function MapManager.removeMap()
-	-- Get the chosen map from the Maps folder in ReplicatedStorage
+	-- get the chosen map from the Maps folder in ReplicatedStorage
+	-- update for less exploitability - grab the map from serverstorage instead
 	local map = ReplicatedStorage.Shared:WaitForChild('Maps'):GetChildren()[1]
 	 
+	-- destroy the map in Workspace
     print(map:GetChildren())
     for _, child in ipairs(workspace:GetChildren()) do
         for _, mapChild in ipairs(map:GetChildren()) do
@@ -148,7 +231,7 @@ function MapManager.removeMap()
         end
 	end
 
-    -- Destroy the map in ReplicatedStorage
+    -- destroy the map in ReplicatedStorage
     map:Destroy()
 end
 

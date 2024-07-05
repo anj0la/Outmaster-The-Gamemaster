@@ -6,7 +6,7 @@ local ServerScriptService = game:GetService('ServerScriptService')
 
 -- EventCreator
 local UtilityModules = ServerScriptService.Server:WaitForChild('UtilityModules')
-local EventCreator = require(UtilityModules:WaitForChild('EventCreator'))
+local InstanceFactory = require(UtilityModules:WaitForChild('InstanceFactory'))
 
 -- Events
 local RemoteEvents = ReplicatedStorage.Shared:WaitForChild('RemoteEvents')
@@ -14,16 +14,16 @@ local UpdateTimer = RemoteEvents:FindFirstChild('UpdateTimer')
 local UpdatePlayersLeft = RemoteEvents:FindFirstChild('UpdatePlayersLeft')
 local UpdateGamemasterFrame = RemoteEvents:FindFirstChild('UpdateGamemasterFrame')
 
--- Functions
+-- Module Functions
 function DisplayManager.init()
     if not UpdateTimer then
-        UpdateTimer = EventCreator.createEvent('RemoteEvent', 'UpdateTimer', RemoteEvents)
+        UpdateTimer = InstanceFactory.createInstance('RemoteEvent', 'UpdateTimer', RemoteEvents)
     end
     if not UpdatePlayersLeft then
-        UpdatePlayersLeft = EventCreator.createEvent('RemoteEvent', 'UpdatePlayersLeft', RemoteEvents)
+        UpdatePlayersLeft = InstanceFactory.createInstance('RemoteEvent', 'UpdatePlayersLeft', RemoteEvents)
     end
     if not UpdateGamemasterFrame then
-        UpdateGamemasterFrame = EventCreator.createEvent('RemoteEvent', 'UpdateGamemasterFrame', RemoteEvents)
+        UpdateGamemasterFrame = InstanceFactory.createInstance('RemoteEvent', 'UpdateGamemasterFrame', RemoteEvents)
     end
 end
 
