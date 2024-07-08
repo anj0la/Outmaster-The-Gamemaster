@@ -31,19 +31,32 @@ local gamemaster = nil
 local function handleHammerDamage(hitPlayer, attacker)
     local hitHumanoid = hitPlayer.Character and hitPlayer.Character:FindFirstChild('Humanoid')
     local attackerHumanoid = attacker.Character and attacker.Character:FindFirstChild('Humanoid')
-    
+    local gamemasterTeam = Teams:WaitForChild('Gamemaster')
+    local playersTeam = Teams:WaitForChild('Players')
+
     if hitHumanoid and attackerHumanoid then
         local hitTeam = hitPlayer.Team
         local attackerTeam = attacker.Team
         
         if hitTeam and attackerTeam then
-            if hitTeam == Teams:WaitForChild('Gamemaster') then
+            -- check 1: if the attacker team = Gamemaster and the hitTeam = Player, then kill the player
+            if attackerTeam == gamemasterTeam and hitTeam == playersTeam then
+                -- kill the player
+                hitHumanoid.Health = 0
+                -- increment xp for the Gamemaster
+                -- decrease the number of players left
+                -- by calling DisplayManager.updatePlayersLeft(players, nil)
+                -- ALL WILL BE DONE LATER
+            -- check 2: attacker team = player and hit team = gamemaster
+            elseif attackerTeam == playersTeam and hitTeam == gamemasterTeam then
                 -- end the round and kill the Gamemaster
                 hitHumanoid.Health = 0
+                hitHumanoid.Health = 0 -- IGNORE, just to not get annoying selene error
                 -- add additional logic to end the round here
                 -- EndRound:Fire(gamemaster)
                 -- {endGame = true, winner = attacker}
-            elseif hitTeam == Teams:WaitForChild('Players') and attackerTeam == Teams:WaitForChild('Players') then
+            -- check 3: attacker team = player and hit team = player
+            elseif attackerTeam == playersTeam and hitTeam == playersTeam then
                 -- kill both players and drop the hammer
                 hitHumanoid.Health = 0
                 attackerHumanoid.Health = 0
@@ -55,6 +68,7 @@ local function handleHammerDamage(hitPlayer, attacker)
         end
     end
 end
+
 
 -- Module Functions --
 
