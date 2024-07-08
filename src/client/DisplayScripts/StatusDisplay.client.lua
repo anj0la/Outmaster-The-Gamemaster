@@ -3,6 +3,8 @@ local Players = game:GetService('Players')
 local ReplicatedStorage = game:GetService('ReplicatedStorage')
 
 -- Guis --
+local Guis = ReplicatedStorage.Shared:WaitForChild('Guis')
+local GamemasterGuis = Guis:WaitForChild('GamemasterGuis')
 local PlayerGui = Players.LocalPlayer:WaitForChild('PlayerGui')
 local StatusDisplayGui = PlayerGui:WaitForChild('StatusDisplayGui')
 
@@ -66,9 +68,27 @@ local function onUpdateGamemasterFrame(gamemaster, visible)
 end
 
 local function onDisplayGamemasterRoleInfo(gamemaster, visible)
-	print('adding display gui here when finished')
-	print('gamemaster: ', gamemaster)
-	print('visibility: ', visible)
+	local gamemasterRoleGui = PlayerGui:FindFirstChild('GamemasterRoleGui')
+
+	-- if not already cloned to the player gui, clone it
+    if not gamemasterRoleGui then
+        local gamemasterRoleGuiTemplate = GamemasterGuis:FindFirstChild('GamemasterRoleGui')
+        if gamemasterRoleGuiTemplate then
+            gamemasterRoleGui = gamemasterRoleGuiTemplate:Clone()
+            gamemasterRoleGui.Parent = PlayerGui
+        else
+            warn('Gamemaster GUI template not found!')
+            return
+        end
+	end
+
+	-- enable or disable the gui
+	gamemasterRoleGui.Enabled = visible
+
+	-- if the gui should not be visible, we can destroy it
+	if not visible then
+		gamemasterRoleGui:Destroy()
+	end
 end
 
 -- Event Bindings --

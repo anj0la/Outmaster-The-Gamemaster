@@ -9,6 +9,7 @@ local GameModules = ServerScriptService.Server:WaitForChild('GameModules')
 local UtilityModules = ServerScriptService.Server:WaitForChild('UtilityModules')
 
 -- Module Scripts --
+local CloneTool = require(UtilityModules:WaitForChild('CloneTool'))
 local DisplayManager = require(GameModules:WaitForChild('DisplayManager'))
 local GameInit = require(GameModules:WaitForChild('GameInit'))
 local GameSettings = require(Configurations:WaitForChild('GameSettings'))
@@ -39,6 +40,10 @@ local function startTimer(timer, duration, callback)
 		DisplayManager.updateTimer(_timeLeft, nil)
 		task.wait()
 	end
+end
+
+local function runRoundLoop()
+
 end
 
 local function stopTimer(timer)
@@ -127,7 +132,7 @@ function GameManager.runPlayerHeadstart()
 	DisplayManager.updateTimer(nil, 'ROUND STARTS IN')
 	DisplayManager.updatePlayersLeft(PlayerManager.getPlayerCount(), true)
 	DisplayManager.displayGamemasterRoleInfo(TeamManager.getGamemaster(), true)
-	
+
 	startTimer(playerHeadstartTimer, GameSettings.PLAYER_HEAD_START_DURATION, startRound)
 	-- displaying information to the gamemaster
 	
