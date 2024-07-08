@@ -14,7 +14,7 @@ local OpenSecretDoor = RemoteEvents:WaitForChild('OpenSecretDoor')
 
 -- Remote Functions --
 local RemoteFunctions = ReplicatedStorage.Shared:WaitForChild('RemoteFunctions')
-local CloneToolFunction = RemoteFunctions:WaitForChild('CloneToolFunction')
+local CloneGoldenHammer = RemoteFunctions:WaitForChild('CloneGoldenHammer')
 
 -- Guis --
 local Guis = ReplicatedStorage.Shared:WaitForChild('Guis')
@@ -117,7 +117,7 @@ end
 local function onCollectedGoldenHammer(player, goldenHammer)
     goldenHammer:Destroy()
     -- call the RemoteFunction to clone the tool to the player's backpack
-    local success = CloneToolFunction:InvokeServer()
+    local success = CloneGoldenHammer:InvokeServer()
     if success then
         print('Tool successfully cloned to backpack.') -- delete later
         -- fire event to run local script

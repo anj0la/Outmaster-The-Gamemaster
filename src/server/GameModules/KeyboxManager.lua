@@ -4,7 +4,6 @@ local KeyboxManager = {}
 local ReplicatedStorage = game:GetService('ReplicatedStorage')
 local RunService = game:GetService('RunService')
 local ServerScriptService = game:GetService('ServerScriptService')
-local ServerStorage = game:GetService('ServerStorage')
 
 -- Module Folders --
 local Configurations = ServerScriptService.Server:WaitForChild('Configurations')
@@ -20,10 +19,6 @@ local KeyboxGuiEvent = RemoteEvents:FindFirstChild('KeyboxGuiEvent')
 local CompletedKeyboxGui = RemoteEvents:FindFirstChild('CompletedKeyboxGui')
 local IncreaseKeyCount = RemoteEvents:FindFirstChild('IncreaseKeyCount')
 local OpenSecretDoor = RemoteEvents:FindFirstChild('OpenSecretDoor')
-
--- Remote Functions --
-local RemoteFunctions = ReplicatedStorage.Shared:WaitForChild('RemoteFunctions')
-local CloneToolFunction = RemoteFunctions:FindFirstChild('CloneToolFunction')
 
 -- Guis --
 local Guis = ReplicatedStorage.Shared:WaitForChild('Guis')
@@ -81,23 +76,6 @@ local function increaseKeyCount(player)
     end
 end
 
-local function cloneToolToPlayer(player, toolName)
-    -- check if the tool exists in ServerStorage
-    local tool = ServerStorage:WaitForChild('Tools'):WaitForChild(toolName)
-    local toolScript = ServerStorage:WaitForChild('ToolScripts'):WaitForChild('GoldenHammerScript')
-    if tool then
-        -- clone the tool and script
-        local clonedTool = tool:Clone()
-        local clonedToolScript = toolScript:Clone()
-        -- parent the cloned script to the cloned tool and the cloned tool to the player's backpack
-        clonedToolScript.Parent = clonedTool
-        clonedTool.Parent = player:WaitForChild('Backpack')
-        return true
-    else
-        warn('Tool not found in ServerStorage.')
-        return false
-    end
-end 
 
 -- Module Functions --
 
@@ -115,16 +93,10 @@ function KeyboxManager.init()
     if not OpenSecretDoor then
         OpenSecretDoor = InstanceFactory.createInstance('RemoteEvent', 'OpenSecretDoor', RemoteEvents)
     end
-    if not CloneToolFunction then
-        CloneToolFunction = InstanceFactory.createInstance('RemoteFunction', 'CloneToolFunction', RemoteFunctions)
-    end
 
     -- Event Bindings --
     CompletedKeyboxGui.OnServerEvent:Connect(openKeyboxDoor)
     IncreaseKeyCount.OnServerEvent:Connect(increaseKeyCount)
-    CloneToolFunction.OnServerInvoke = function(player)
-        return cloneToolToPlayer(player, 'Golden Hammer')
-    end
 end
 
 function KeyboxManager.run(players)

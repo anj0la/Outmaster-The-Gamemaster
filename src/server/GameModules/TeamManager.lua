@@ -9,6 +9,7 @@ local Teams = game:GetService('Teams')
 local UtilityModules = ServerScriptService.Server:WaitForChild('UtilityModules')
 
 -- Module Scripts --
+local CloneTool = require(UtilityModules:WaitForChild('CloneTool'))
 local InstanceFactory = require(UtilityModules:WaitForChild('InstanceFactory'))
 
 -- Module Scripts --
@@ -16,7 +17,7 @@ local GamemasterChance = require(UtilityModules:WaitForChild('GamemasterChance')
 
 -- Remote Events --
 local RemoteEvents = ReplicatedStorage.Shared:WaitForChild('RemoteEvents')
-local GoldenHammerDamageEvent = RemoteEvents:FindFirstChild('GoldenHammerDamageEvent')
+local HammerDamageEvent = RemoteEvents:FindFirstChild('HammerDamageEvent')
 
 -- Lobby Variables --
 local Lobby = workspace:WaitForChild('Lobby')
@@ -27,7 +28,7 @@ local players = {}
 local gamemaster = nil
 
 -- Local Functions --
-local function handleGoldenHammerDamage(hitPlayer, attacker)
+local function handleHammerDamage(hitPlayer, attacker)
     local hitHumanoid = hitPlayer.Character and hitPlayer.Character:FindFirstChild('Humanoid')
     local attackerHumanoid = attacker.Character and attacker.Character:FindFirstChild('Humanoid')
     
@@ -42,7 +43,7 @@ local function handleGoldenHammerDamage(hitPlayer, attacker)
                 -- add additional logic to end the round here
                 -- EndRound:Fire(gamemaster)
                 -- {endGame = true, winner = attacker}
-            elseif hitTeam == Teams:WaitForChild('Players') then
+            elseif hitTeam == Teams:WaitForChild('Players') and attackerTeam == Teams:WaitForChild('Players') then
                 -- kill both players and drop the hammer
                 hitHumanoid.Health = 0
                 attackerHumanoid.Health = 0
@@ -59,11 +60,15 @@ end
 
 -- Function to initalize the events related to the teams
 function TeamManager.init()
-    if not GoldenHammerDamageEvent then
-        GoldenHammerDamageEvent = InstanceFactory.createInstance('RemoteEvent', 'GoldenHammerDamageEvent', RemoteEvents)
+    if not HammerDamageEvent then
+        HammerDamageEvent = InstanceFactory.createInstance('RemoteEvent', 'HammerDamageEvent', RemoteEvents)
     end
 
-    GoldenHammerDamageEvent.OnServerEvent:Connect(handleGoldenHammerDamage)
+    -- initalizing clone tool module for cloning the golden hammer (players) and regular hammer (gamemaster)
+    CloneTool.init()
+
+    -- Event Bindings --
+    HammerDamageEvent.OnServerEvent:Connect(handleHammerDamage)
 end
 
 -- Function to initalize the gamemaster and players
@@ -114,6 +119,7 @@ end
 function TeamManager.spawnGamemasterInGame()
 	local character = gamemaster.Character
 	local gamemasterSpawnLocation = workspace:WaitForChild('GamemasterSpawnLocation')
+    CloneTool.cloneHammerToPlayer(gamemaster)
 	character.HumanoidRootPart.CFrame = gamemasterSpawnLocation.CFrame
 end
 

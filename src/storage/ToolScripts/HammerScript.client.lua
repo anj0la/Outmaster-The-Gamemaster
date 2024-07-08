@@ -6,15 +6,15 @@ local ReplicatedStorage = game:GetService('ReplicatedStorage')
 local Player = Players.LocalPlayer
 
 -- Local Variables --
-local goldenHammer = script.Parent
-local hammerHead = goldenHammer:WaitForChild('Head')
+local hammer = script.Parent
+local hammerHead = hammer:WaitForChild('Head')
 local debounce = false
 local canDamage = false
 local swingTrack = nil
 
 -- Remote Events --
 local RemoteEvents = ReplicatedStorage.Shared:WaitForChild('RemoteEvents')
-local GoldenHammerDamageEvent = RemoteEvents:WaitForChild('GoldenHammerDamageEvent')
+local HammerDamageEvent = RemoteEvents:WaitForChild('HammerDamageEvent')
 
 -- Local Functions --
 
@@ -26,9 +26,9 @@ local function onEquipped()
     local animation = Instance.new('Animation')
     
     if humanoid.RigType == Enum.HumanoidRigType.R15 then
-        animation = goldenHammer:FindFirstChild('Swing')
+        animation = hammer:FindFirstChild('Swing')
     else
-        animation = goldenHammer:FindFirstChild('SwingR6')
+        animation = hammer:FindFirstChild('SwingR6')
     end
     
     swingTrack = animator:LoadAnimation(animation)
@@ -58,7 +58,7 @@ local function onHit(hit)
 		canDamage = false
 		local hitPlayer = Players:GetPlayerFromCharacter(hitHumanoid)
 		if hitPlayer then
-            GoldenHammerDamageEvent:FireServer(hitPlayer, Player)
+            HammerDamageEvent:FireServer(hitPlayer, Player)
 		end
 	end
 end
@@ -92,5 +92,5 @@ local function onActivated()
 end
 
 -- Event Bindings --
-goldenHammer.Equipped:Connect(onEquipped)
-goldenHammer.Activated:Connect(onActivated)
+hammer.Equipped:Connect(onEquipped)
+hammer.Activated:Connect(onActivated)
