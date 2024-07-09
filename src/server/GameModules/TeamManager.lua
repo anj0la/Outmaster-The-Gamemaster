@@ -3,6 +3,7 @@ local TeamManager = {}
 -- Services --
 local ReplicatedStorage = game:GetService('ReplicatedStorage')
 local ServerScriptService = game:GetService('ServerScriptService')
+local ServerStorage = game:GetService('ServerStorage')
 local Teams = game:GetService('Teams')
 
 -- Module Folders --
@@ -11,13 +12,15 @@ local UtilityModules = ServerScriptService.Server:WaitForChild('UtilityModules')
 -- Module Scripts --
 local CloneTool = require(UtilityModules:WaitForChild('CloneTool'))
 local InstanceFactory = require(UtilityModules:WaitForChild('InstanceFactory'))
-
--- Module Scripts --
 local GamemasterChance = require(UtilityModules:WaitForChild('GamemasterChance'))
+
+-- Gamemaster Scripts --
+local GamemasterScripts = ServerStorage:WaitForChild('GamemasterScripts')
 
 -- Remote Events --
 local RemoteEvents = ReplicatedStorage.Shared:WaitForChild('RemoteEvents')
 local HammerDamageEvent = RemoteEvents:FindFirstChild('HammerDamageEvent')
+local ToggleFirstPerson = RemoteEvents:FindFirstChild('ToggleFirstPerson')
 
 -- Lobby Variables --
 local Lobby = workspace:WaitForChild('Lobby')
@@ -28,6 +31,8 @@ local players = {}
 local gamemaster = nil
 
 -- Local Functions --
+
+-- Local function to handle hammer damage
 local function handleHammerDamage(hitPlayer, attacker)
     local hitHumanoid = hitPlayer.Character and hitPlayer.Character:FindFirstChild('Humanoid')
     local attackerHumanoid = attacker.Character and attacker.Character:FindFirstChild('Humanoid')
@@ -69,13 +74,26 @@ local function handleHammerDamage(hitPlayer, attacker)
     end
 end
 
+local function setUpGamemaster()
+    -- clone the hammer to the gamemaster
+    CloneTool.cloneHammerToPlayer(gamemaster)
+    -- clone the local script to the gamemaster
+    local cameraViewScriptClone = GamemasterScripts:WaitForChild('CameraViewScript'):Clone()
+    cameraViewScriptClone.Parent = gamemaster.Character
+    -- toggle first person (true = we set the gamemaster in first position, false = don't enable movement)
+    ToggleFirstPerson:FireClient(gamemaster, true) -- gamemaster = player, the first argument to FireClient
+end
 
 -- Module Functions --
 
 -- Function to initalize the events related to the teams
 function TeamManager.init()
+    -- creating events related to gamemaster and players
     if not HammerDamageEvent then
         HammerDamageEvent = InstanceFactory.createInstance('RemoteEvent', 'HammerDamageEvent', RemoteEvents)
+    end
+    if not ToggleFirstPerson then
+        ToggleFirstPerson = InstanceFactory.createInstance('RemoteEvent', 'ToggleFirstPerson', RemoteEvents)
     end
 
     -- initalizing clone tool module for cloning the golden hammer (players) and regular hammer (gamemaster)
@@ -90,6 +108,9 @@ function TeamManager.initTeams(activePlayers)
     -- getting the gamemaster and assigning them to the gamemaster team
     gamemaster = GamemasterChance.selectGamemaster(activePlayers)
     gamemaster.Team = Teams:WaitForChild('Gamemaster')
+
+    -- put gamemaster in first person, clone tool to their backpack, and disable movement
+    setUpGamemaster()
 
     -- now, assigning the rest of the players to the player team
     for i = #activePlayers, 1, -1 do
@@ -133,8 +154,13 @@ end
 function TeamManager.spawnGamemasterInGame()
 	local character = gamemaster.Character
 	local gamemasterSpawnLocation = workspace:WaitForChild('GamemasterSpawnLocation')
-    CloneTool.cloneHammerToPlayer(gamemaster)
 	character.HumanoidRootPart.CFrame = gamemasterSpawnLocation.CFrame
+end
+
+-- Function to reset the gamemaster's view back to normal
+function TeamManager.resetGamemasterView()
+    -- we run this function before assigning the players back to the waiting queue 
+    ToggleFirstPerson:FireClient(gamemaster, false)
 end
 
 -- Function to spawn queued players back into the lobby
