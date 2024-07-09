@@ -33,35 +33,39 @@ local gamemaster = nil
 -- Local Functions --
 
 -- Local function to handle hammer damage
-local function handleHammerDamage(hitPlayer, attacker)
+local function handleHammerDamage(attacker, hitPlayer)
     local hitHumanoid = hitPlayer.Character and hitPlayer.Character:FindFirstChild('Humanoid')
     local attackerHumanoid = attacker.Character and attacker.Character:FindFirstChild('Humanoid')
     local gamemasterTeam = Teams:WaitForChild('Gamemaster')
     local playersTeam = Teams:WaitForChild('Players')
+
+    print('hit player: ', hitPlayer)
+
+    print('attacker: ', attacker)
 
     if hitHumanoid and attackerHumanoid then
         local hitTeam = hitPlayer.Team
         local attackerTeam = attacker.Team
         
         if hitTeam and attackerTeam then
-            -- check 1: if the attacker team = Gamemaster and the hitTeam = Player, then kill the player
-            if attackerTeam == gamemasterTeam and hitTeam == playersTeam then
+            -- check 1: if the hit team = player and the attacker = gamemaster, then kill the player
+            if hitTeam == playersTeam and attackerTeam == gamemasterTeam then
                 -- kill the player
                 hitHumanoid.Health = 0
                 -- increment xp for the Gamemaster
                 -- decrease the number of players left
                 -- by calling DisplayManager.updatePlayersLeft(players, nil)
                 -- ALL WILL BE DONE LATER
-            -- check 2: attacker team = player and hit team = gamemaster
-            elseif attackerTeam == playersTeam and hitTeam == gamemasterTeam then
+            -- check 2: hit team = gamemaster, attacker team = player
+            elseif hitTeam == gamemasterTeam and attackerTeam == playersTeam then
                 -- end the round and kill the Gamemaster
+                ToggleFirstPerson:FireClient(gamemaster, false) -- putting gamemaster back in third person
                 hitHumanoid.Health = 0
-                hitHumanoid.Health = 0 -- IGNORE, just to not get annoying selene error
                 -- add additional logic to end the round here
                 -- EndRound:Fire(gamemaster)
                 -- {endGame = true, winner = attacker}
             -- check 3: attacker team = player and hit team = player
-            elseif attackerTeam == playersTeam and hitTeam == playersTeam then
+            elseif hitTeam == playersTeam and attackerTeam == playersTeam then
                 -- kill both players and drop the hammer
                 hitHumanoid.Health = 0
                 attackerHumanoid.Health = 0
@@ -159,7 +163,6 @@ end
 
 -- Function to reset the gamemaster's view back to normal
 function TeamManager.resetGamemasterView()
-    -- we run this function before assigning the players back to the waiting queue 
     ToggleFirstPerson:FireClient(gamemaster, false)
 end
 
@@ -169,8 +172,8 @@ function TeamManager.spawnPlayersInLobby(queuedPlayers)
 	for i = #queuedPlayers, 1, -1 do
         local player = queuedPlayers[i]
         player.Team = Teams:WaitForChild('Spectators') -- moving the players to the spectator team
-        -- INSTEAD, JUST CALL PLAYER:LOADCHARACTER()
-        -- player:LoadCharacter()
+        -- removing all scripts inside of the players with LoadCharacter
+        player:LoadCharacter()
 		local character = player.Character
 		character.HumanoidRootPart.CFrame = lobbySpawn.CFrame
     end

@@ -63,7 +63,6 @@ local function startRound()
 	DisplayManager.updateTimer(0, nil)
 	-- removing the gui from the gamemaster
 	DisplayManager.displayGamemasterRoleInfo(TeamManager.getGamemaster(), false)
-	TeamManager.spawnGamemasterInGame()
 	task.wait(GameSettings.TRANSITION_DURATION)
 end
 
@@ -118,9 +117,9 @@ function GameManager.prepareRound()
 	TeamManager.initTeams(PlayerManager.getActivePlayers())
 	DisplayManager.updateGamemaster(TeamManager.getGamemaster(), true) -- this is where we select the gamemaster and get the player
 
-	-- spawning the players into the chosen maps
+	-- spawning the players and gamemaster into the chosen maps
 	TeamManager.spawnPlayersInGame()
-
+	TeamManager.spawnGamemasterInGame()
 	-- CHANGE FROM GETACTICEPLAYERS TO GETPLAYERS (because get active players includes the gamemaster, getplayers doesn't include it)
 	-- only keeping it rn for testing purposes
 	KeyboxManager.run(PlayerManager.getActivePlayers())
@@ -166,6 +165,7 @@ function GameManager.resetRound()
     print('active players: ', PlayerManager.getActivePlayers())
     print('queued players: ', PlayerManager.getQueuedPlayers())
 	task.wait(GameSettings.TRANSITION_DURATION)
+	TeamManager.resetGamemasterView()
 	TeamManager.spawnPlayersInLobby(PlayerManager.getQueuedPlayers())
 	-- PlayerManager.spawnPlayersInLobby()
 	MapManager.removeMap()

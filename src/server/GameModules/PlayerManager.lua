@@ -42,7 +42,6 @@ local function onCharacterDespawned(character)
 	local player = Players:GetPlayerFromCharacter(character)
 	-- if player is actively in a game, removes from the active queue and places them in the waiting queue
 	PlayerManager.removePlayerFromGame(player) 
-	player.RespawnLocation = lobbySpawn
 end
 
 local function onPlayerAdded()
@@ -161,7 +160,11 @@ function PlayerManager.removePlayerFromGame(player)
 			table.remove(activePlayers, i)
 			table.insert(queuedPlayers, player)
 			-- create bindable event here to remove player from team, and update number of players on team left
-			player.Team = Teams:WaitForChild('Spectators') -- moving the players to the spectator team ()
+			player.Team = Teams:WaitForChild('Spectators') -- moving the players to the spectator team
+			-- reload character to remove all character scripts
+			-- player:LoadCharacter()
+			-- now spawn them in the lobby
+			player.Character.HumanoidRootPart.CFrame = lobbySpawn.CFrame
 			break
 		end  
     end

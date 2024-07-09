@@ -22,6 +22,7 @@ local humanoid = character:FindFirstChildOfClass('Humanoid')
 
 -- Local function to enable first-person view
 local function toggleFirstPerson(firstPerson)
+    print('first person: ', firstPerson)
     if firstPerson then
         print('we should be running')
         camera.CameraType = Enum.CameraType.Scriptable

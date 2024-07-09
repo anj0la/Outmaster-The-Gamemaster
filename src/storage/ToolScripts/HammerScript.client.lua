@@ -58,7 +58,7 @@ local function onHit(hit)
 		canDamage = false
 		local hitPlayer = Players:GetPlayerFromCharacter(hitHumanoid)
 		if hitPlayer then
-            HammerDamageEvent:FireServer(hitPlayer, Player)
+            HammerDamageEvent:FireServer(hitPlayer)
 		end
 	end
 end
