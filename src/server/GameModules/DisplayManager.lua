@@ -14,6 +14,8 @@ local UpdateTimer = RemoteEvents:FindFirstChild('UpdateTimer')
 local UpdatePlayersLeft = RemoteEvents:FindFirstChild('UpdatePlayersLeft')
 local UpdateGamemasterFrame = RemoteEvents:FindFirstChild('UpdateGamemasterFrame')
 local DisplayGamemasterRoleInfo = RemoteEvents:FindFirstChild('DisplayGamemasterRoleInfo')
+local DisplayActivateGui = RemoteEvents:FindFirstChild('DisplayActivateGui')
+
 
 -- Module Functions --
 
@@ -30,6 +32,9 @@ function DisplayManager.init()
     end
     if not DisplayGamemasterRoleInfo then
         DisplayGamemasterRoleInfo = InstanceFactory.createInstance('RemoteEvent', 'DisplayGamemasterRoleInfo', RemoteEvents)
+    end
+    if not DisplayActivateGui then
+        DisplayActivateGui = InstanceFactory.createInstance('RemoteEvent', 'DisplayActivateGui', RemoteEvents)
     end
 end
 
@@ -51,6 +56,11 @@ end
 -- Function to display the gamemaster role information to the gamemaster
 function DisplayManager.displayGamemasterRoleInfo(gamemaster, visible)
     DisplayGamemasterRoleInfo:FireClient(gamemaster, gamemaster, visible)
+end
+
+-- Function to display the activate gui to the gamemaster
+function DisplayManager.displayActivateGui(gamemaster, visible)
+    DisplayActivateGui:FireClient(gamemaster, gamemaster, visible)
 end
 
 return DisplayManager

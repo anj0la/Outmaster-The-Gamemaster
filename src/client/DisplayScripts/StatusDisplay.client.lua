@@ -20,6 +20,8 @@ local UpdateGamemasterFrame = RemoteEvents:WaitForChild('UpdateGamemasterFrame')
 local UpdatePlayersLeft = RemoteEvents:WaitForChild('UpdatePlayersLeft')
 local UpdateTimer = RemoteEvents:WaitForChild('UpdateTimer')
 local DisplayGamemasterRoleInfo = RemoteEvents:WaitForChild('DisplayGamemasterRoleInfo')
+local DisplayActivateGui = RemoteEvents:WaitForChild('DisplayActivateGui')
+
 
 -- Local Variables --
 local gamemasterImageLabel = gamemasterFrame:WaitForChild('GamemasterImageLabel')
@@ -91,8 +93,34 @@ local function onDisplayGamemasterRoleInfo(gamemaster, visible)
 	end
 end
 
+local function onDisplayActivateGui(gamemaster, visible)
+	local activateGui = PlayerGui:FindFirstChild('ActivateGui')
+
+		-- if not already cloned to the player gui, clone it
+		if not activateGui then
+			local activateGuiTemplate = GamemasterGuis:FindFirstChild('ActivateGui')
+			if activateGuiTemplate then
+				activateGui = activateGuiTemplate:Clone()
+				activateGui.Parent = PlayerGui
+			else
+				warn('Gamemaster GUI template not found!')
+				return
+			end
+		end
+	
+		-- enable or disable the gui
+		activateGui.Enabled = visible
+	
+		-- if the gui should not be visible, we can destroy it
+		if not visible then
+			activateGui:Destroy()
+		end
+
+end
+
 -- Event Bindings --
 UpdateTimer.OnClientEvent:Connect(onUpdateTimer)
 UpdatePlayersLeft.OnClientEvent:Connect(onUpdatePlayersLeft)
 UpdateGamemasterFrame.OnClientEvent:Connect(onUpdateGamemasterFrame)
 DisplayGamemasterRoleInfo.OnClientEvent:Connect(onDisplayGamemasterRoleInfo)
+DisplayActivateGui.OnClientEvent:Connect(onDisplayActivateGui)

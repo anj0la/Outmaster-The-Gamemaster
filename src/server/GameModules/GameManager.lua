@@ -131,6 +131,7 @@ function GameManager.runPlayerHeadstart()
 	DisplayManager.updateTimer(nil, 'ROUND STARTS IN')
 	DisplayManager.updatePlayersLeft(PlayerManager.getPlayerCount(), true)
 	DisplayManager.displayGamemasterRoleInfo(TeamManager.getGamemaster(), true)
+	DisplayManager.displayActivateGui(TeamManager.getGamemaster(), true)
 
 	startTimer(playerHeadstartTimer, GameSettings.PLAYER_HEAD_START_DURATION, startRound)
 	-- displaying information to the gamemaster
@@ -162,6 +163,7 @@ function GameManager.resetRound()
 	print("Resetting the round...")
 	-- winner = nil
 	DisplayManager.updateTimer(0, 'ENDING GAME')
+	DisplayManager.displayActivateGui(TeamManager.getGamemaster(), false)
     print('active players: ', PlayerManager.getActivePlayers())
     print('queued players: ', PlayerManager.getQueuedPlayers())
 	task.wait(GameSettings.TRANSITION_DURATION)
@@ -171,5 +173,6 @@ function GameManager.resetRound()
 	MapManager.removeMap()
 	DisplayManager.updatePlayersLeft(0, false)
 	DisplayManager.updateGamemaster(nil, false)
+
 end
 return GameManager

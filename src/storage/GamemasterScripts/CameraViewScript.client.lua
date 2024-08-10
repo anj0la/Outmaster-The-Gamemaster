@@ -2,6 +2,7 @@
 local Players = game:GetService('Players')
 local ReplicatedStorage = game:GetService('ReplicatedStorage')
 local StarterGui = game:GetService('StarterGui')
+local UserInputService = game:GetService('UserInputService')
 
 -- Remote Events --
 local RemoteEvents = ReplicatedStorage.Shared:WaitForChild('RemoteEvents')
@@ -34,7 +35,7 @@ local function toggleFirstPerson(firstPerson)
         StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false) 
         -- equipping the tool (has been cloned to player's backpack)
         humanoid:EquipTool(hammer)
-
+        
     else -- firstPerson = false
         camera.CameraType = Enum.CameraType.Custom
         Player.CameraMode = Enum.CameraMode.Classic
