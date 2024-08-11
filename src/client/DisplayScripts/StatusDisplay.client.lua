@@ -1,6 +1,7 @@
 -- Services --
 local Players = game:GetService('Players')
 local ReplicatedStorage = game:GetService('ReplicatedStorage')
+local TweenService = game:GetService('TweenService')
 
 -- Guis --
 local Guis = ReplicatedStorage.Shared:WaitForChild('Guis')
@@ -21,13 +22,16 @@ local UpdatePlayersLeft = RemoteEvents:WaitForChild('UpdatePlayersLeft')
 local UpdateTimer = RemoteEvents:WaitForChild('UpdateTimer')
 local DisplayGamemasterRoleInfo = RemoteEvents:WaitForChild('DisplayGamemasterRoleInfo')
 local DisplayActivateGui = RemoteEvents:WaitForChild('DisplayActivateGui')
-
+local UpdateActivateProgressBar = RemoteEvents:WaitForChild('UpdateActivateProgressBar')
 
 -- Local Variables --
 local gamemasterImageLabel = gamemasterFrame:WaitForChild('GamemasterImageLabel')
 local playersLeftLabel = playersLeftFrame:WaitForChild('PlayersLeftLabel')
 local statusLabel = timerFrame:WaitForChild('StatusLabel')
 local timerLabel = timerFrame:WaitForChild('TimerLabel')
+
+-- Constants --
+local PROGRESS_TIME = 10
 
 -- Local Functions --
 
@@ -115,6 +119,19 @@ local function onDisplayActivateGui(gamemaster, visible)
 		if not visible then
 			activateGui:Destroy()
 		end
+end
+
+local function onUpdateActivateProgressBar()
+	local activateGui = PlayerGui:FindFirstChild('ActivateGui')
+	local activateBaseFrame = activateGui:WaitForChild('BaseFrame')
+	local progressFrame = activateBaseFrame:WaitForChild('ProgressFrame')
+
+	-- create a Tween to smoothly animate the progress bar
+	local tweenInfo = TweenInfo.new(PROGRESS_TIME, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
+	local goal = { Size = UDim2.new(1, 0, 1, 0), Position = UDim2.new(0, 0, 0, 0) }
+
+	local tween = TweenService:Create(progressFrame, tweenInfo, goal)
+	tween:Play()
 
 end
 
@@ -124,3 +141,4 @@ UpdatePlayersLeft.OnClientEvent:Connect(onUpdatePlayersLeft)
 UpdateGamemasterFrame.OnClientEvent:Connect(onUpdateGamemasterFrame)
 DisplayGamemasterRoleInfo.OnClientEvent:Connect(onDisplayGamemasterRoleInfo)
 DisplayActivateGui.OnClientEvent:Connect(onDisplayActivateGui)
+UpdateActivateProgressBar.OnClientEvent:Connect(onUpdateActivateProgressBar)

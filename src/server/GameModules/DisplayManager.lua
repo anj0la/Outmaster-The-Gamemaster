@@ -15,7 +15,7 @@ local UpdatePlayersLeft = RemoteEvents:FindFirstChild('UpdatePlayersLeft')
 local UpdateGamemasterFrame = RemoteEvents:FindFirstChild('UpdateGamemasterFrame')
 local DisplayGamemasterRoleInfo = RemoteEvents:FindFirstChild('DisplayGamemasterRoleInfo')
 local DisplayActivateGui = RemoteEvents:FindFirstChild('DisplayActivateGui')
-
+local UpdateActivateProgressBar = RemoteEvents:FindFirstChild('UpdateActivateProgressBar')
 
 -- Module Functions --
 
@@ -35,6 +35,9 @@ function DisplayManager.init()
     end
     if not DisplayActivateGui then
         DisplayActivateGui = InstanceFactory.createInstance('RemoteEvent', 'DisplayActivateGui', RemoteEvents)
+    end
+    if not UpdateActivateProgressBar then
+        UpdateActivateProgressBar = InstanceFactory.createInstance('RemoteEvent', 'UpdateActivateProgressBar', RemoteEvents)
     end
 end
 
@@ -63,4 +66,7 @@ function DisplayManager.displayActivateGui(gamemaster, visible)
     DisplayActivateGui:FireClient(gamemaster, gamemaster, visible)
 end
 
+function DisplayManager.updateActivateProgressBar(gamemaster)
+    UpdateActivateProgressBar:FireClient(gamemaster)
+end
 return DisplayManager

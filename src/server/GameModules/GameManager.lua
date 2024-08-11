@@ -9,7 +9,7 @@ local GameModules = ServerScriptService.Server:WaitForChild('GameModules')
 local UtilityModules = ServerScriptService.Server:WaitForChild('UtilityModules')
 
 -- Module Scripts --
-local CloneTool = require(UtilityModules:WaitForChild('CloneTool'))
+--local CloneTool = require(UtilityModules:WaitForChild('CloneTool'))
 local DisplayManager = require(GameModules:WaitForChild('DisplayManager'))
 local GameInit = require(GameModules:WaitForChild('GameInit'))
 local GameSettings = require(Configurations:WaitForChild('GameSettings'))
@@ -42,14 +42,12 @@ local function startTimer(timer, duration, callback)
 	end
 end
 
-local function runRoundLoop()
-
-end
-
+-- Local function to stop a timer
 local function stopTimer(timer)
 	timer:stop()
 end
 
+-- Local function to end map voting
 local function endVoting()
 	print('Ending map voting...')
     DisplayManager.updateTimer(0, nil)
@@ -57,6 +55,7 @@ local function endVoting()
 	MapManager.selectChosenMap()
 end
 
+-- Local function to start the round
 local function startRound()
 	-- spawn the Gamemaster into the game
 	print("Starting the round...")
@@ -66,11 +65,50 @@ local function startRound()
 	task.wait(GameSettings.TRANSITION_DURATION)
 end
 
+-- Local function to end the round
 local function endRound()
 	PlayerManager.removePlayersFromActive()
+	DisplayManager.displayActivateGui(TeamManager.getGamemaster(), false)
 	print("Ending the round...")
 	-- will be a boolean value check, sets some stopping variable to true or false i think
 	-- displays winner or something 
+end
+
+local function shouldActivateGameWindow(timeLeft)
+	if timeLeft == GameSettings.ACTIVATE_GAME_WINDOW then
+		return true
+	end
+	return false
+end
+
+local function activateGameWindow()
+	print('TIME TO ACTIVATE GAME!!')
+	-- call GamemasterManager.activateGame(true)
+end
+
+-- Local function to run the round
+local function roundLoop(timer, duration)
+	-- if a connection exists, then we skip this step, done to avoid creating multiple connections to a timer object
+	if not timer._connection then
+		timer._connection = timer.finished:Connect(endRound)
+	end
+	timer:start(duration)
+
+	local gameActivated = false
+	DisplayManager.updateActivateProgressBar(TeamManager.getGamemaster())
+    
+    -- updating the display status with the time left
+	while timer:isRunning() do
+		local _timeLeft = (math.floor(timer:getTimeLeft() + 1))
+
+		if shouldActivateGameWindow(_timeLeft) then
+			activateGameWindow()
+			gameActivated = true
+		end
+
+		DisplayManager.updateTimer(_timeLeft, nil)
+		task.wait() -- wait for the next frame
+	end
 end
 
 -- Module Functions --
@@ -142,9 +180,11 @@ end
 function GameManager.runRound()
 	print("Starting round timer...")
 	DisplayManager.updateTimer(nil, 'TIME LEFT')
-	startTimer(roundTimer, GameSettings.ROUND_DURATION, endRound)
+	roundLoop(roundTimer, GameSettings.ROUND_DURATION)
 	-- PUT GAME LOGIC HERE
 	-- THIS IS WHERE WE WOULD PROBABLY PUT FPS STUFF
+	-- if a connection exists, then we skip this step, done to avoid creating multiple connections to a timer object
+    -- updating the display status with the time left
 	-- when team manager thing ends, we need to fire an event that makes the timer go to 0, to fire the endRound
 	-- so we'll need to use a bindable event called EndRound that fires once the Gamemaster has been killed or all the players have been
 	-- killed
@@ -163,7 +203,6 @@ function GameManager.resetRound()
 	print("Resetting the round...")
 	-- winner = nil
 	DisplayManager.updateTimer(0, 'ENDING GAME')
-	DisplayManager.displayActivateGui(TeamManager.getGamemaster(), false)
     print('active players: ', PlayerManager.getActivePlayers())
     print('queued players: ', PlayerManager.getQueuedPlayers())
 	task.wait(GameSettings.TRANSITION_DURATION)
